@@ -25,12 +25,18 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('gender', 20)->nullable();
             $table->date('dob')->nullable();
+            $table->unsignedInteger('age')->nullable();
             $table->string('nationality')->nullable();
             $table->string('phone')->nullable();
             $table->string('passport_number')->nullable();
+            $table->date('passport_issue_date')->nullable();
+            $table->date('passport_expiry_date')->nullable();
 
             $table->text('current_address')->nullable();
             $table->text('permanent_address')->nullable();
+
+            $table->string('intake')->nullable();
+            $table->string('photo')->nullable();
 
             $table->string('highest_qualification')->nullable();
             $table->string('last_institution_name')->nullable();
@@ -39,20 +45,27 @@ return new class extends Migration
 
             $table->string('japanese_level')->nullable();
             $table->string('japanese_test_type')->nullable();
+            $table->string('japanese_exam_score')->nullable();
             $table->integer('japanese_training_hours')->nullable();
 
-            $table->string('sponsor_name')->nullable();
-            $table->string('sponsor_relationship')->nullable();
+            $table->string('sponsor_name_1')->nullable();
+            $table->string('sponsor_relationship_1')->nullable();
+            $table->string('sponsor_occupation_1')->nullable();
+            $table->decimal('sponsor_annual_income_1', 12, 2)->nullable();
+            $table->decimal('sponsor_savings_amount_1', 12, 2)->nullable();
 
-            $table->string('intake')->nullable();
-            $table->string('photo')->nullable();
+            $table->string('sponsor_name_2')->nullable();
+            $table->string('sponsor_relationship_2')->nullable();
+            $table->string('sponsor_occupation_2')->nullable();
+            $table->decimal('sponsor_annual_income_2', 12, 2)->nullable();
+            $table->decimal('sponsor_savings_amount_2', 12, 2)->nullable();
+
+            $table->text('career_path')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
 
             $table->index('student_name');
-            $table->index('email');
-            $table->index('passport_number');
         });
     }
 

@@ -21,6 +21,7 @@ class Student extends Model
         'email',
         'gender',
         'dob',
+        'age',
         'nationality',
         'phone',
         'passport_number',
@@ -32,25 +33,36 @@ class Student extends Model
         'academic_gap_years',
         'japanese_level',
         'japanese_test_type',
+        'japanese_exam_score',
         'japanese_training_hours',
         'sponsor_name',
         'sponsor_relationship',
+        'sponsor_name_1',
+        'sponsor_relationship_1',
+        'sponsor_occupation_1',
+        'sponsor_annual_income_1',
+        'sponsor_savings_amount_1',
+        'sponsor_name_2',
+        'sponsor_relationship_2',
+        'sponsor_occupation_2',
+        'sponsor_annual_income_2',
+        'sponsor_savings_amount_2',
         'intake',
         'photo',
+        'career_path',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'dob' => 'date',
-            'graduation_year' => 'integer',
-            'academic_gap_years' => 'integer',
-        ];
-    }
-
-    // -------------------------
-    // RELATIONSHIPS
-    // -------------------------
+    protected $casts = [
+        'dob' => 'date',
+        'graduation_year' => 'integer',
+        'academic_gap_years' => 'integer',
+        'japanese_training_hours' => 'integer',
+        'age' => 'integer',
+        'sponsor_annual_income_1' => 'decimal:2',
+        'sponsor_savings_amount_1' => 'decimal:2',
+        'sponsor_annual_income_2' => 'decimal:2',
+        'sponsor_savings_amount_2' => 'decimal:2',
+    ];
 
     public function user(): BelongsTo
     {
@@ -74,21 +86,12 @@ class Student extends Model
             'student_school_applications',
             'student_id',
             'school_id'
-        )->withPivot([
-            'status',
-            'assigned_by',
-            'applied_by',
-            'applied_at',
-        ])->withTimestamps();
+        )->withPivot(['status', 'assigned_by', 'applied_by', 'applied_at'])
+         ->withTimestamps();
     }
 
-    public function studentProfile()
+    public function documents(): HasMany
     {
-        return $this->hasOne(Student::class, 'user_id');
-    }
-
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(Notification::class);
+        return $this->hasMany(StudentDocument::class);
     }
 }

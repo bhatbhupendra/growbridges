@@ -45,7 +45,7 @@ class User extends Authenticatable
     // If this user is a student account linked to one student profile
     public function studentProfile(): HasMany
     {
-        return $this->hasMany(Student::class, 'user_id');
+        return $this->hasOne(Student::class, 'user_id');
     }
 
     // If this user is an agent/admin who created students

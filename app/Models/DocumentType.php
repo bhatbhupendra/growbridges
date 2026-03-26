@@ -25,4 +25,22 @@ class DocumentType extends Model
     {
         return $this->hasMany(StudentDocument::class, 'doc_type_id');
     }
+
+    public static function normalizeFileType(?string $fileType): string
+    {
+        $ft = strtolower(trim((string) $fileType));
+        $allowed = ['pdf', 'jpeg', 'jpg', 'doc', 'docx', 'xls', 'xlsx'];
+
+        if (!in_array($ft, $allowed, true)) {
+            return 'pdf';
+        }
+
+        return $ft === 'jpg' ? 'jpeg' : $ft;
+    }
+
+    public static function cleanCategory(?string $category): string
+    {
+        $category = trim((string) $category);
+        return $category === '' ? 'Other' : $category;
+    }
 }
