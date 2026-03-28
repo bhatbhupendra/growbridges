@@ -49,7 +49,6 @@ class StudentFileController extends Controller
             'JAPANESE TRANSLATED DOCUMENTS',
             'Financial',
             'Study Plan',
-            'School',
             'Additional',
         ];
 

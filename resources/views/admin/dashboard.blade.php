@@ -60,7 +60,7 @@ body {
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="m-0" style="font-weight:800;">AGENTS & CONSULTANCY</h6>
-                    <span class="badge badge-soft">Users (Role: Student)</span>
+                    <span class="badge badge-soft">Users (Role: Agent)</span>
                 </div>
 
                 <div class="table-responsive">
@@ -102,7 +102,7 @@ body {
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="m-0" style="font-weight:800;">Self-Apply Students</h6>
-                    <span class="badge badge-soft">Users (Role: Agent)</span>
+                    <span class="badge badge-soft">Users (Role: Student)</span>
                 </div>
 
                 <div class="table-responsive">
@@ -110,6 +110,7 @@ body {
                         <thead class="table-dark">
                             <tr>
                                 <th style="width:60px;">#</th>
+                                <th>id</th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th style="width:120px;">Role</th>
@@ -120,11 +121,12 @@ body {
                             @forelse($students as $index => $student)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
+                                <td>{{ $student->id }}</td>
                                 <td>{{ $student->name }}</td>
                                 <td>{{ $student->email }}</td>
                                 <td>{{ $student->role }}</td>
                                 <td>
-                                    <a class="btn btn-sm btn-success w-100" href="">
+                                    <a class="btn btn-sm btn-success w-100" href="{{ route('admin.student.show',$student) }}">
                                         View Student Data
                                     </a>
                                 </td>
@@ -196,8 +198,12 @@ body {
 
                 <div class="mb-2" style="font-weight:800;">Quick actions</div>
                 <div class="d-grid gap-2">
-                    <a href="{{ route('admin.school.show', 1) }}" class="btn btn-outline-primary btn-sm">
+                    <a href="{{ route('admin.preschool.show', 1) }}" class="btn btn-outline-primary btn-sm">
                         PRE-SCHOOL
+                    </a>
+
+                    <a href="{{ route('manage-users.index') }}" class="btn btn-outline-primary btn-sm">
+                        Manage Users
                     </a>
 
                     <a href="" class="btn btn-outline-primary btn-sm">

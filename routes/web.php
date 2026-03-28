@@ -1,13 +1,16 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentFormController;
+use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\DocumentTypeController;
 use App\Http\Controllers\Admin\SchoolRequirementController;
 use App\Http\Controllers\StudentFileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\SchoolController;
+use App\Http\Controllers\Admin\PreSchoolController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AgentController;
 use App\Http\Controllers\StudentZipController;
 use App\Http\Controllers\Agent\AgentDashboardController;
@@ -20,6 +23,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+
+//admin manage users routes
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
+    Route::resource('manage-users', UserController::class);
+});
+
+
 
 //profile
 Route::middleware('auth')->group(function () {
@@ -45,9 +56,9 @@ Route::middleware(['auth','role:admin'])->group(function () {
     });
 });
 
-//student controller for show create and update destroy
+//student form controller for show create and update destroy
 Route::middleware(['auth', 'role:admin,agent'])->group(function () {
-    Route::resource('student', StudentController::class);
+    Route::resource('student', StudentFormController::class);
 });
 
 
@@ -125,9 +136,20 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/school/{school}', [SchoolController::class, 'show'])
         ->name('admin.school.show');
-    Route::post('admin/school/{school}/applications/{application}/assign-school', [SchoolController::class, 'assignStudentToSchool'])
-    ->name('school.assign-student-school');
+    //admin preschool
+    Route::get('/admin/pre-school/{school}', [PreSchoolController::class, 'show'])
+        ->name('admin.preschool.show');
+    Route::post('admin/pre-school/{school}/applications/{application}/assign-school', [PreSchoolController::class, 'assignStudentToSchool'])
+        ->name('preschool.assign-student-school');
+    Route::delete('/admin/pre-school/{school}/applications/{application}/remove-school/{targetApplication}',[PreSchoolController::class, 'removeStudentFromSchool'])
+        ->name('preschool.remove-student-school');
 });
+
+// //admin student page
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/student-page/{user}', [StudentController::class, 'show'])
+        ->name('admin.student.show');
+});        
 //student zip file
 Route::middleware(['auth'])->group(function () {
     Route::get('/student/{student}/zip', [StudentZipController::class, 'download'])

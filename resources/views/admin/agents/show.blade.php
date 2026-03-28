@@ -198,69 +198,89 @@ body {
                         <tbody>
                             @forelse($students as $index => $row)
                             @php
-                            $student = $row['student'];
-                            $school = $row['school'];
+                                $student = $row['student'];
+                                $schools = collect($row['schools']);
+                                $activeSchoolId = $row['active_school_id'];
+                                $activeSchool = $schools->firstWhere('id', $activeSchoolId) ?? $schools->first();
                             @endphp
                             <tr>
                                 <td>{{ $index + 1 }}</td>
+
                                 <td>
                                     <div class="student-name">
                                         {{ $student->student_name }}
                                         @if(!empty($student->student_name_jp))
-                                        <span class="text-primary">({{ $student->student_name_jp }})</span>
+                                            <span class="text-primary">({{ $student->student_name_jp }})</span>
                                         @endif
                                     </div>
                                     <div class="student-meta">
                                         @if(!empty($student->gender))
-                                        <span class="badge badge-soft me-1">Gender: {{ $student->gender }}</span>
+                                            <span class="badge badge-soft me-1">Gender: {{ $student->gender }}</span>
                                         @endif
                                         @if(!empty($student->nationality))
-                                        <span class="badge badge-soft me-1">Nationality:
-                                            {{ $student->nationality }}</span>
+                                            <span class="badge badge-soft me-1">Nationality: {{ $student->nationality }}</span>
                                         @endif
                                         @if(!empty($student->intake))
-                                        <span class="badge badge-soft me-1">Intake: {{ $student->intake }}</span>
+                                            <span class="badge badge-soft me-1">Intake: {{ $student->intake }}</span>
                                         @endif
                                         @if(!empty($student->age))
-                                        Age: {{ $student->age }}
+                                            Age: {{ $student->age }}
                                         @endif
                                     </div>
                                 </td>
-                                <td>{{ $school?->name ?? '—' }}</td>
+
                                 <td>
-                                    <div class="doc-list">
-                                        @if($row['docs']->isEmpty())
-                                        <span class="text-muted">No required documents set.</span>
-                                        @else
-                                        @foreach($row['docs'] as $doc)
-                                        <div class="{{ $doc['submitted'] ? 'doc-ok' : 'doc-miss' }}">
-                                            {{ $doc['submitted'] ? '✔' : '✖' }} {{ $doc['name'] }}
-                                        </div>
-                                        @endforeach
-                                        @endif
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    @if($row['photo_url'])
-                                    <img src="{{ $row['photo_url'] }}" class="thumb" alt="Student Photo">
+                                    @if($schools->isEmpty())
+                                        <span class="text-muted">—</span>
                                     @else
-                                    <span class="text-muted">—</span>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach($schools as $schoolItem)
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm school-switch-btn {{ $activeSchool && $activeSchool['id'] == $schoolItem['id'] ? 'btn-primary' : 'btn-outline-primary' }}"
+                                                    data-student-id="{{ $student->id }}"
+                                                    data-school-id="{{ $schoolItem['id'] }}">
+                                                    {{ $schoolItem['name'] }}
+                                                </button>
+                                            @endforeach
+                                        </div>
                                     @endif
                                 </td>
+
                                 <td>
-                                    @if($school)
-                                    <a href="{{ route('students.file.show', [$student, $school]) }}"
-                                        class="btn btn-sm btn-success w-100 mb-1">
+                                    <div class="doc-list" id="docs-{{ $student->id }}">
+                                        @if($activeSchool && !empty($activeSchool['docs']))
+                                            @foreach($activeSchool['docs'] as $doc)
+                                                <div class="{{ $doc['submitted'] ? 'doc-ok' : 'doc-miss' }}">
+                                                    {{ $doc['submitted'] ? '✔' : '✖' }} {{ $doc['name'] }}
+                                                </div>
+                                            @endforeach
+                                        @else
+                                            <span class="text-muted">No required documents set.</span>
+                                        @endif
+                                    </div>
+                                </td>
+
+                                <td class="text-center" id="photo-{{ $student->id }}">
+                                    @if($activeSchool && !empty($activeSchool['photo_url']))
+                                        <img src="{{ $activeSchool['photo_url'] }}" class="thumb" alt="Student Photo">
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    <a href="{{ $activeSchool['view_url'] ?? '#' }}"
+                                        id="view-btn-{{ $student->id }}"
+                                        class="btn btn-sm btn-success w-100 mb-1 {{ $activeSchool ? '' : 'disabled' }}">
                                         View Student
                                     </a>
-                                    @endif
 
-                                    <a href="{{ route('students.zip', $student) }}"
-                                        class="btn btn-sm btn-primary w-100">
+                                    <a href="{{ route('student.zip', $student) }}" class="btn btn-sm btn-primary w-100 mb-1">
                                         ZIP FILES
                                     </a>
 
-                                    <form method="POST" action="{{ route('students.destroy', $student) }}" class="mt-1">
+                                    <form method="POST" action="{{ route('student.destroy', $student) }}">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger w-100"
@@ -268,6 +288,10 @@ body {
                                             Delete Student
                                         </button>
                                     </form>
+
+                                    <script type="application/json" id="student-school-data-{{ $student->id }}">
+                                        @json($schools->values())
+                                    </script>
                                 </td>
                             </tr>
                             @empty
@@ -412,7 +436,7 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const t = document.getElementById("toastMsg");
     if (t) {
         t.style.display = "block";
@@ -420,6 +444,56 @@ document.addEventListener('DOMContentLoaded', function() {
             t.style.display = "none";
         }, 3500);
     }
+
+    document.querySelectorAll('.school-switch-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const studentId = this.dataset.studentId;
+            const schoolId = parseInt(this.dataset.schoolId, 10);
+
+            const dataEl = document.getElementById(`student-school-data-${studentId}`);
+            if (!dataEl) return;
+
+            const schools = JSON.parse(dataEl.textContent || '[]');
+            const selected = schools.find(s => parseInt(s.id, 10) === schoolId);
+            if (!selected) return;
+
+            document.querySelectorAll(`.school-switch-btn[data-student-id="${studentId}"]`).forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary');
+
+            const docsEl = document.getElementById(`docs-${studentId}`);
+            if (docsEl) {
+                if (selected.docs && selected.docs.length) {
+                    docsEl.innerHTML = selected.docs.map(doc => {
+                        const cls = doc.submitted ? 'doc-ok' : 'doc-miss';
+                        const icon = doc.submitted ? '✔' : '✖';
+                        return `<div class="${cls}">${icon} ${doc.name}</div>`;
+                    }).join('');
+                } else {
+                    docsEl.innerHTML = `<span class="text-muted">No required documents set.</span>`;
+                }
+            }
+
+            const photoEl = document.getElementById(`photo-${studentId}`);
+            if (photoEl) {
+                if (selected.photo_url) {
+                    photoEl.innerHTML = `<img src="${selected.photo_url}" class="thumb" alt="Student Photo">`;
+                } else {
+                    photoEl.innerHTML = `<span class="text-muted">—</span>`;
+                }
+            }
+
+            const viewBtn = document.getElementById(`view-btn-${studentId}`);
+            if (viewBtn) {
+                viewBtn.href = selected.view_url || '#';
+                viewBtn.classList.remove('disabled');
+            }
+        });
+    });
 });
 </script>
 @endsection

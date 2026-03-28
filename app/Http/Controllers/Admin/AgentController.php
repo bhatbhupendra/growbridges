@@ -71,17 +71,23 @@ class AgentController extends Controller
 
         $students = $studentsQuery->get();
 
-        $studentRows = $students->map(function ($student) {
-            $school = $student->applications->first()?->school;
+        $studentRows = $students->map(function ($student) use ($selectedSchool) {
+            $applications = $student->applications
+                ->filter(fn ($app) => $app->school)
+                ->values();
 
-            $docOutput = collect();
-            if ($school) {
+            $schoolsData = $applications->map(function ($app) use ($student) {
+                $school = $app->school;
+
+                $docOutput = collect();
+
                 $requiredDocs = SchoolRequiredDoc::with('documentType')
                     ->where('school_id', $school->id)
                     ->get();
 
                 foreach ($requiredDocs as $req) {
                     $dt = $req->documentType;
+
                     if (!$dt) {
                         continue;
                     }
@@ -97,22 +103,39 @@ class AgentController extends Controller
                         'submitted' => $submitted,
                     ]);
                 }
+
+                $photoDocument = StudentDocument::query()
+                    ->where('student_id', $student->id)
+                    ->where('school_id', $school->id)
+                    ->whereHas('documentType', function ($q) {
+                        $q->whereIn('file_type', ['jpg', 'jpeg', 'png', 'webp']);
+                    })
+                    ->latest()
+                    ->first();
+
+                return [
+                    'id' => $school->id,
+                    'name' => $school->name,
+                    'docs' => $docOutput->values()->all(),
+                    'photo_url' => $photoDocument ? Storage::url($photoDocument->file_path) : null,
+                    'view_url' => route('student.file.show', [$student, $school]),
+                ];
+            })->values();
+
+            $defaultSchool = null;
+
+            if ($selectedSchool !== 'all' && ctype_digit((string) $selectedSchool)) {
+                $defaultSchool = $schoolsData->firstWhere('id', (int) $selectedSchool);
             }
 
-            $photoDocument = StudentDocument::query()
-                ->where('student_id', $student->id)
-                ->when($school, fn ($q) => $q->where('school_id', $school->id))
-                ->whereHas('documentType', function ($q) {
-                    $q->whereIn('file_type', ['jpg', 'jpeg']);
-                })
-                ->latest()
-                ->first();
+            if (!$defaultSchool) {
+                $defaultSchool = $schoolsData->first();
+            }
 
             return [
                 'student' => $student,
-                'school' => $school,
-                'docs' => $docOutput,
-                'photo_url' => $photoDocument ? Storage::url($photoDocument->file_path) : null,
+                'schools' => $schoolsData,
+                'active_school_id' => $defaultSchool['id'] ?? null,
             ];
         });
 

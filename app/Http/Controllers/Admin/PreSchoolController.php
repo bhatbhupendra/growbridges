@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
-class SchoolController extends Controller
+class PreSchoolController extends Controller
 {
     public function show(Request $request, School $school): View
     {
@@ -112,6 +112,24 @@ class SchoolController extends Controller
                 ->map(fn ($id) => (int) $id)
                 ->all();
 
+            // $assignedSchools = $student->applications
+            //     ->map(fn ($app) => $app->school?->name)
+            //     ->filter()
+            //     ->values();
+
+
+            $assignedSchools = $student->applications
+                ->filter(fn ($app) => $app->school)
+                ->map(function ($app) use ($application) {
+                    return [
+                        'application_id' => $app->id,
+                        'school_id' => $app->school_id,
+                        'school_name' => $app->school->name,
+                        'is_current' => (int) $app->id === (int) $application->id,
+                    ];
+                })
+                ->values();
+
             $availableSchools = $allSchools
                 ->reject(fn ($s) => in_array((int) $s->id, $assignedSchoolIds, true))
                 ->values();
@@ -132,10 +150,11 @@ class SchoolController extends Controller
                 'docs' => $docOutput,
                 'photo_url' => $photoDocument ? Storage::url($photoDocument->file_path) : null,
                 'available_schools' => $availableSchools,
+                'assigned_schools' => $assignedSchools,
             ];
         });
 
-        return view('admin.school.show', [
+        return view('admin.preschool.show', [
             'school' => $school,
             'studentCount' => $studentCount,
             'user'=>$user,
@@ -149,6 +168,77 @@ class SchoolController extends Controller
         ]);
     }
 
+    public function assignStudentToSchool(Request $request, School $school, StudentSchoolApplication $application): RedirectResponse
+    {
+        abort_unless(auth()->user()->role === 'admin', 403);
+
+        if ((int) $application->school_id !== (int) $school->id) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'school_id' => ['required', 'integer', 'exists:schools,id'],
+        ]);
+
+        $student = $application->student;
+
+        $newApp = StudentSchoolApplication::firstOrCreate(
+            [
+                'student_id' => $student->id,
+                'school_id' => (int) $data['school_id'],
+            ],
+            [
+                'status' => 'pending',
+                'assigned_by' => auth()->id(),
+                'applied_by' => auth()->id(),
+                'applied_at' => now(),
+            ]
+        );
+
+        if (!$newApp->wasRecentlyCreated) {
+            return redirect()
+                ->route('admin.preschool.show', $school)
+                ->with('error', 'This student is already assigned to that school.');
+        }
+
+        return redirect()
+            ->route('admin.preschool.show', $school)
+            ->with('success', 'Student assigned to another school successfully.');
+    }
+
+    public function removeStudentFromSchool(
+        Request $request,
+        School $school,
+        StudentSchoolApplication $application,
+        StudentSchoolApplication $targetApplication
+    ): RedirectResponse {
+        abort_unless(auth()->user()->role === 'admin', 403);
+
+        if ((int) $application->school_id !== (int) $school->id) {
+            abort(404);
+        }
+
+        if ((int) $application->student_id !== (int) $targetApplication->student_id) {
+            return redirect()
+                ->route('admin.preschool.show', $school)
+                ->with('error', 'Selected school assignment does not belong to this student.');
+        }
+
+        // optional: stop removing the current application row itself
+        if ((int) $targetApplication->id === (int) $application->id) {
+            return redirect()
+                ->route('admin.preschool.show', $school)
+                ->with('error', 'You cannot remove the current school from this row.');
+        }
+
+        $targetSchoolName = $targetApplication->school?->name ?? 'selected school';
+
+        $targetApplication->delete();
+
+        return redirect()
+            ->route('admin.preschool.show', $school)
+            ->with('success', "Student removed from {$targetSchoolName} successfully.");
+    }
     public function update(UpdateSchoolRequest $request, School $school): RedirectResponse
     {
         abort_unless(auth()->user()->role === 'admin', 403);
@@ -158,7 +248,7 @@ class SchoolController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.school.show', $school)
+            ->route('admin.preschool.show', $school)
             ->with('success', 'School name updated successfully!');
     }
 
@@ -170,7 +260,7 @@ class SchoolController extends Controller
 
         if ($studentCount > 0) {
             return redirect()
-                ->route('admin.school.show', $school)
+                ->route('admin.preschool.show', $school)
                 ->with('error', 'Cannot delete this school because students are enrolled. Remove or move them first.');
         }
 

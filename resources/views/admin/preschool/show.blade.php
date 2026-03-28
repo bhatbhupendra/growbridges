@@ -208,8 +208,9 @@ body {
                             <tr>
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
+                                <th style="width:220px;">Assigned Schools</th>
                                 <th style="width:140px;">Agent</th>
-                                <th style="width:260px;">Documents</th>
+                                <th style="width:260px;">Info</th>
                                 <th style="width:130px;">Photo</th>
                                 <th style="width:150px;">Status</th>
                                 <th style="width:220px;">Action</th>
@@ -259,6 +260,38 @@ body {
                                     </div>
                                 </td>
 
+                                <td>
+                                    @if(!empty($row['assigned_schools']) && count($row['assigned_schools']))
+                                        <div class="d-flex flex-column gap-1">
+                                            @foreach($row['assigned_schools'] as $assignedSchool)
+                                                <div class="d-flex align-items-center justify-content-between gap-2 border rounded px-2 py-1">
+                                                    <div>
+                                                        <span class="badge badge-soft">{{ $assignedSchool['school_name'] }}</span>
+
+                                                        @if($assignedSchool['is_current'])
+                                                            <span class="badge bg-dark">Current</span>
+                                                        @endif
+                                                    </div>
+
+                                                    @unless($assignedSchool['is_current'])
+                                                        <form method="POST"
+                                                            action="{{ route('preschool.remove-student-school', [$school, $application, $assignedSchool['application_id']]) }}"
+                                                            onsubmit="return confirm('Remove this assigned school from the student?');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                                Remove
+                                                            </button>
+                                                        </form>
+                                                    @endunless
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <span class="text-muted">No assigned schools</span>
+                                    @endif
+                                </td>
+
                                 <td>{{ $agent }}</td>
 
                                 <td class="text-muted" style="font-size:12px;">
@@ -272,6 +305,7 @@ body {
                                     @if($photoPath)
                                     <img src="{{ $photoPath }}" alt="Student Photo" class="thumb">
                                     @else
+                                    
                                     <span class="text-muted">No photo</span>
                                     @endif
                                 </td>
@@ -292,12 +326,19 @@ body {
                                         <a class="btn btn-sm btn-primary" href="{{ route('student.zip', $st) }}">
                                             ZIP Files
                                         </a>
+
+                                        <button type="button" class="btn btn-sm btn-outline-primary btnAssignSchool"
+                                            data-student-name="{{ $st->student_name }}"
+                                            data-route="{{ route('preschool.assign-student-school', [$school, $application]) }}"
+                                            data-schools='@json($row["available_schools"]->map(fn($s) => ["id" => $s->id, "name" => $s->name])->values())'>
+                                            Assign School
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center">No students enrolled yet.</td>
+                                <td colspan="8" class="text-center">No students enrolled yet.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -396,6 +437,51 @@ document.addEventListener('DOMContentLoaded', function() {
             delay: 4500
         }).show();
     }
+
+    const assignModalEl = document.getElementById('assignSchoolModal');
+    const assignModal = assignModalEl ? new bootstrap.Modal(assignModalEl) : null;
+    const assignForm = document.getElementById('assignSchoolForm');
+    const assignStudentName = document.getElementById('assignStudentName');
+    const assignSchoolSelect = document.getElementById('assignSchoolSelect');
+    const assignNoSchoolsMsg = document.getElementById('assignNoSchoolsMsg');
+    const assignSubmitBtn = document.getElementById('assignSchoolSubmitBtn');
+
+    document.querySelectorAll('.btnAssignSchool').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const studentName = this.dataset.studentName || 'Student';
+            const route = this.dataset.route || '#';
+            let schools = [];
+
+            try {
+                schools = JSON.parse(this.dataset.schools || '[]');
+            } catch (e) {
+                schools = [];
+            }
+
+            assignStudentName.textContent = studentName;
+            assignForm.action = route;
+            assignSchoolSelect.innerHTML = '<option value="">Select school</option>';
+
+            if (schools.length === 0) {
+                assignNoSchoolsMsg.classList.remove('d-none');
+                assignSchoolSelect.disabled = true;
+                assignSubmitBtn.disabled = true;
+            } else {
+                assignNoSchoolsMsg.classList.add('d-none');
+                assignSchoolSelect.disabled = false;
+                assignSubmitBtn.disabled = false;
+
+                schools.forEach(school => {
+                    const option = document.createElement('option');
+                    option.value = school.id;
+                    option.textContent = school.name;
+                    assignSchoolSelect.appendChild(option);
+                });
+            }
+
+            assignModal?.show();
+        });
+    });
 });
 </script>
 @endsection
