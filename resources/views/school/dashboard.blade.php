@@ -149,7 +149,17 @@ body {
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="m-0" style="font-weight:800;">Assigned Students</h6>
-                    <span class="badge badge-soft">{{ $rows->count() }} Results</span>
+
+                    <div class="d-flex gap-2 align-items-center">
+                        <span class="badge badge-soft">{{ $rows->count() }} Results</span>
+                        <span class="badge badge-soft">
+                            Selected: <span class="selected-student-count-label">0</span>
+                        </span>
+
+                        @include('components.student-export-selected-modal', [
+                        'modalId' => 'schoolStudentExportSelectedModal'
+                        ])
+                    </div>
                 </div>
 
                 <form method="GET" class="row g-2 align-items-end mb-3">
@@ -166,29 +176,35 @@ body {
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-bold">Agent</label>
-                        <select name="agent_id" class="form-select">
-                            <option value="all" {{ $selectedAgent === 'all' ? 'selected' : '' }}>All agents</option>
-                            @foreach($agents as $agent)
-                            <option value="{{ $agent->id }}"
-                                {{ (string)$selectedAgent === (string)$agent->id ? 'selected' : '' }}>
-                                {{ $agent->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-md-3">
                         <label class="form-label fw-bold">Status</label>
                         <select name="status" class="form-select">
                             <option value="all" {{ $selectedStatus === 'all' ? 'selected' : '' }}>All status</option>
-                            <option value="pending" {{ $selectedStatus === 'pending' ? 'selected' : '' }}>Pending
+                            <option value="interview" {{ $selectedStatus === 'interview' ? 'selected' : '' }}>
+                                School want to interview
                             </option>
-                            <option value="accepted" {{ $selectedStatus === 'accepted' ? 'selected' : '' }}>Accepted
+                            <option value="selected" {{ $selectedStatus === 'selected' ? 'selected' : '' }}>
+                                Selected
                             </option>
-                            <option value="rejected" {{ $selectedStatus === 'rejected' ? 'selected' : '' }}>Rejected
+                            <option value="rejected" {{ $selectedStatus === 'rejected' ? 'selected' : '' }}>
+                                Rejected
                             </option>
-                            <option value="enrolled" {{ $selectedStatus === 'enrolled' ? 'selected' : '' }}>Enrolled
+                            <option value="coe-applied" {{ $selectedStatus === 'coe-applied' ? 'selected' : '' }}>
+                                COE Applied
+                            </option>
+                            <option value="coe-granted" {{ $selectedStatus === 'coe-granted' ? 'selected' : '' }}>
+                                COE Granted
+                            </option>
+                            <option value="coe-rejected" {{ $selectedStatus === 'coe-rejected' ? 'selected' : '' }}>
+                                COE Rejected
+                            </option>
+                            <option value="visa-granted" {{ $selectedStatus === 'visa-granted' ? 'selected' : '' }}>
+                                Visa Granted
+                            </option>
+                            <option value="visa-rejected" {{ $selectedStatus === 'visa-rejected' ? 'selected' : '' }}>
+                                Visa Rejected
+                            </option>
+                            <option value="withdrawal" {{ $selectedStatus === 'withdrawal' ? 'selected' : '' }}>
+                                Withdrawal
                             </option>
                         </select>
                     </div>
@@ -202,9 +218,11 @@ body {
                     <table class="table table-bordered table-striped align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
+                                <th style="width:45px;" class="text-center">
+                                    <input type="checkbox" onchange="toggleAllStudentExportCheckboxes(this)">
+                                </th>
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
-                                <th style="width:140px;">Agent</th>
                                 <th style="width:260px;">Documents</th>
                                 <th style="width:130px;">Photo</th>
                                 <th style="width:150px;">Status</th>
@@ -225,6 +243,10 @@ body {
                             };
                             @endphp
                             <tr>
+                                <td class="text-center">
+                                    <input type="checkbox" class="student-export-checkbox" value="{{ $student->id }}"
+                                        onchange="updateSelectedStudentCount()">
+                                </td>
                                 <td>{{ $index + 1 }}</td>
                                 <td>
                                     <div class="student-name">
@@ -246,7 +268,6 @@ body {
                                         @endif
                                     </div>
                                 </td>
-                                <td>{{ $student->creator?->name ?? '—' }}</td>
                                 <td>
                                     <div class="doc-list">
                                         @if($row['docs']->isEmpty())
@@ -260,13 +281,23 @@ body {
                                         @endif
                                     </div>
                                 </td>
-                                <td class="text-center">
-                                    @if($row['photo_url'])
-                                    <img src="{{ $row['photo_url'] }}" class="thumb" alt="Student Photo">
+
+                                <td>
+                                    @php
+                                    $rawPath = trim((string)($student['photo'] ?? ''));
+                                    $rawPath = str_replace('\\', '/', $rawPath);
+                                    $rawPath = preg_replace('#^/?storage/#', '', $rawPath);
+                                    $rawPath = ltrim($rawPath, '/');
+
+                                    $fileUrl = asset('storage/' . $rawPath);
+                                    @endphp
+                                    @if($fileUrl)
+                                    <img src="{{ $fileUrl }}" alt="Student Photo" class="thumb">
                                     @else
-                                    <span class="text-muted">—</span>
+                                    <span class="text-muted">No photo</span>
                                     @endif
                                 </td>
+
                                 <td>
                                     <span class="status-chip {{ $chipClass }}">
                                         {{ strtoupper($application->status ?? 'pending') }}
@@ -282,17 +313,33 @@ body {
                                         action="{{ route('school.applications.status', $application) }}">
                                         @csrf
                                         <select name="status" class="form-select form-select-sm mb-1">
-                                            <option value="pending"
-                                                {{ $application->status === 'pending' ? 'selected' : '' }}>Pending
+                                            <option>Select a Status</option>
+                                            <option value="interview"
+                                                {{ $application->status === 'interview' ? 'selected' : '' }}>School want to interview
                                             </option>
-                                            <option value="accepted"
-                                                {{ $application->status === 'accepted' ? 'selected' : '' }}>Accepted
+                                            <option value="selected"
+                                                {{ $application->status === 'selected' ? 'selected' : '' }}>Selected
                                             </option>
                                             <option value="rejected"
                                                 {{ $application->status === 'rejected' ? 'selected' : '' }}>Rejected
                                             </option>
-                                            <option value="enrolled"
-                                                {{ $application->status === 'enrolled' ? 'selected' : '' }}>Enrolled
+                                            <option value="coe-applied"
+                                                {{ $application->status === 'coe-applied' ? 'selected' : '' }}>COE Applied
+                                            </option>
+                                            <option value="coe-granted"
+                                                {{ $application->status === 'coe-granted' ? 'selected' : '' }}>COE Granted
+                                            </option>
+                                            <option value="coe-rejected"
+                                                {{ $application->status === 'coe-rejected' ? 'selected' : '' }}>COE Rejected
+                                            </option>
+                                            <option value="visa-granted"
+                                                {{ $application->status === 'visa-granted' ? 'selected' : '' }}>Visa Granted
+                                            </option>
+                                            <option value="visa-rejected"
+                                                {{ $application->status === 'visa-rejected' ? 'selected' : '' }}>Visa Rejected
+                                            </option>
+                                            <option value="withdrawal"
+                                                {{ $application->status === 'withdrawal' ? 'selected' : '' }}>Withdrawal
                                             </option>
                                         </select>
                                         <button class="btn btn-sm btn-outline-dark w-100">Update Status</button>
@@ -301,7 +348,7 @@ body {
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center">No assigned students found.</td>
+                                <td colspan="8" class="text-center">No assigned students found.</td>
                             </tr>
                             @endforelse
                         </tbody>

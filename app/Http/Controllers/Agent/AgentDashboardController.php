@@ -35,7 +35,8 @@ class AgentDashboardController extends Controller
             ->pluck('intake');
 
         if ($selectedIntake === '') {
-            $selectedIntake = $intakes->first() ?? 'all';
+            // $selectedIntake = $intakes->first() ?? 'all';
+            $selectedIntake = 'all';
         }
 
         $schools = School::query()
@@ -105,20 +106,10 @@ class AgentDashboardController extends Controller
                     ]);
                 }
 
-                $photoDocument = StudentDocument::query()
-                    ->where('student_id', $student->id)
-                    ->where('school_id', $school->id)
-                    ->whereHas('documentType', function ($q) {
-                        $q->whereIn('file_type', ['jpg', 'jpeg', 'png', 'webp']);
-                    })
-                    ->latest()
-                    ->first();
-
                 return [
                     'id' => $school->id,
                     'name' => $school->name,
                     'docs' => $docOutput->values()->all(),
-                    'photo_url' => $photoDocument ? Storage::url($photoDocument->file_path) : null,
                     'view_url' => route('student.file.show', [$student, $school]),
                 ];
             })->values();

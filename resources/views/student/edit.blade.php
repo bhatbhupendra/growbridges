@@ -59,13 +59,12 @@ body {
                 <h5 class="m-0">Edit Student</h5>
                 <div class="text-muted" style="font-size:12px;">Compact update form</div>
             </div>
-            <a href="{{ route('students.index') }}" class="btn btn-secondary btn-sm">Back</a>
         </div>
 
-        <form method="POST" action="{{ route('students.update', $student) }}">
+        <form method="POST" action="{{ route('student.update', $student) }}">
             @csrf
             @method('PUT')
-            @include('students._form')
+            @include('student._form')
         </form>
     </div>
 </div>

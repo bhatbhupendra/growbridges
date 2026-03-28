@@ -110,7 +110,6 @@ body {
                         <thead class="table-dark">
                             <tr>
                                 <th style="width:60px;">#</th>
-                                <th>id</th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th style="width:120px;">Role</th>
@@ -121,7 +120,6 @@ body {
                             @forelse($students as $index => $student)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $student->id }}</td>
                                 <td>{{ $student->name }}</td>
                                 <td>{{ $student->email }}</td>
                                 <td>{{ $student->role }}</td>

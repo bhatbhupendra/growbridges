@@ -153,7 +153,12 @@ body {
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="m-0" style="font-weight:800;">Assigned Students</h6>
-                    <span class="badge badge-soft">{{ $rows->count() }} Results</span>
+                    <div>
+                        <span class="badge badge-soft">{{ $rows->count() }} Results</span>
+                        @include('components.student-export-selected-modal', [
+                        'modalId' => 'schoolStudentExportSelectedModal'
+                        ])
+                    </div>
                 </div>
 
                 <form method="GET" class="row g-2 align-items-end mb-3">
@@ -206,6 +211,9 @@ body {
                     <table class="table table-bordered table-striped align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
+                                <th style="width:45px;" class="text-center">
+                                    <input type="checkbox" onchange="toggleAllStudentExportCheckboxes(this)">
+                                </th>
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
                                 <th style="width:140px;">Agent</th>
@@ -224,6 +232,7 @@ body {
 
                             $name = $st?->student_name ?? '';
                             $jp = $st?->student_name_jp ?? '';
+                            $photo = $st?->photo ?? '';
                             $agent = $st?->creator?->name ?? '-';
                             $gender = $st?->gender ?? '';
                             $nat = $st?->nationality ?? '';
@@ -239,12 +248,13 @@ body {
                             default => 'chip-pending',
                             };
 
-                            $photoPath = $st?->photo
-                            ? asset('storage/' . $st->photo)
-                            : null;
                             @endphp
 
                             <tr>
+                                 <td class="text-center">
+                                    <input type="checkbox" class="student-export-checkbox" value="{{ $st->id }}"
+                                        onchange="updateSelectedStudentCount()">
+                                </td>
                                 <td>{{ $index + 1 }}</td>
 
                                 <td>
@@ -269,8 +279,16 @@ body {
                                 </td>
 
                                 <td>
-                                    @if($photoPath)
-                                    <img src="{{ $photoPath }}" alt="Student Photo" class="thumb">
+                                    @php
+                                    $rawPath = trim((string)($photo ?? ''));
+                                    $rawPath = str_replace('\\', '/', $rawPath);
+                                    $rawPath = preg_replace('#^/?storage/#', '', $rawPath);
+                                    $rawPath = ltrim($rawPath, '/');
+
+                                    $fileUrl = asset('storage/' . $rawPath);
+                                    @endphp
+                                    @if($fileUrl)
+                                    <img src="{{ $fileUrl }}" alt="Student Photo" class="thumb">
                                     @else
                                     <span class="text-muted">No photo</span>
                                     @endif

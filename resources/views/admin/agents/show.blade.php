@@ -141,6 +141,9 @@ body {
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="m-0" style="font-weight:800;">Students List</h6>
+                    @include('components.student-export-selected-modal', [
+                        'modalId' => 'schoolStudentExportSelectedModal'
+                        ])
                 </div>
 
                 <form method="GET" class="filter-bar row g-2 align-items-end mb-2">
@@ -187,6 +190,9 @@ body {
                     <table class="table table-bordered table-striped align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
+                                <th style="width:45px;" class="text-center">
+                                    <input type="checkbox" onchange="toggleAllStudentExportCheckboxes(this)">
+                                </th>
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
                                 <th style="width:170px;">School</th>
@@ -204,6 +210,10 @@ body {
                                 $activeSchool = $schools->firstWhere('id', $activeSchoolId) ?? $schools->first();
                             @endphp
                             <tr>
+                                <td class="text-center">
+                                    <input type="checkbox" class="student-export-checkbox" value="{{ $student->id }}"
+                                        onchange="updateSelectedStudentCount()">
+                                </td>
                                 <td>{{ $index + 1 }}</td>
 
                                 <td>
@@ -262,10 +272,18 @@ body {
                                 </td>
 
                                 <td class="text-center" id="photo-{{ $student->id }}">
-                                    @if($activeSchool && !empty($activeSchool['photo_url']))
-                                        <img src="{{ $activeSchool['photo_url'] }}" class="thumb" alt="Student Photo">
+                                    @php
+                                    $rawPath = trim((string)($student['photo'] ?? ''));
+                                    $rawPath = str_replace('\\', '/', $rawPath);
+                                    $rawPath = preg_replace('#^/?storage/#', '', $rawPath);
+                                    $rawPath = ltrim($rawPath, '/');
+
+                                    $fileUrl = asset('storage/' . $rawPath);
+                                    @endphp
+                                    @if($student['photo'])
+                                        <img src="{{ $fileUrl }}" class="thumb" alt="Student Photo">
                                     @else
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">No Photo</span>
                                     @endif
                                 </td>
 
@@ -475,15 +493,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }).join('');
                 } else {
                     docsEl.innerHTML = `<span class="text-muted">No required documents set.</span>`;
-                }
-            }
-
-            const photoEl = document.getElementById(`photo-${studentId}`);
-            if (photoEl) {
-                if (selected.photo_url) {
-                    photoEl.innerHTML = `<img src="${selected.photo_url}" class="thumb" alt="Student Photo">`;
-                } else {
-                    photoEl.innerHTML = `<span class="text-muted">—</span>`;
                 }
             }
 

@@ -57,7 +57,7 @@ class StudentFormController extends Controller
     {
         $schools = School::orderBy('name')->get();
 
-        return view('agent.dashboard', compact('student', 'schools'));
+        return view('student.edit', compact('student', 'schools'));
     }
 
     public function update(StudentRequest $request, Student $student)

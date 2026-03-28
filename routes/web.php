@@ -24,6 +24,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+use App\Http\Controllers\Export\StudentExportController;
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/students/export-selected', [StudentExportController::class, 'exportSelected'])
+        ->name('students.export.selected');
+});
 
 //admin manage users routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
@@ -79,7 +85,7 @@ Route::middleware(['auth','role:admin'])->group(function () {
 });
 
 //student form controller for show create and update destroy
-Route::middleware(['auth', 'role:admin,agent'])->group(function () {
+Route::middleware(['auth', 'role:admin,agent,student'])->group(function () {
     Route::resource('student', StudentFormController::class);
 });
 

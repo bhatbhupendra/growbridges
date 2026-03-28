@@ -222,6 +222,14 @@ body {
                     <div class="col-md-3">
                         <div><b><u>Photo</u></b></div>
                         <div>
+                            @php
+                            $rawPath = trim((string)($photoUrl ?? ''));
+                            $rawPath = str_replace('\\', '/', $rawPath);
+                            $rawPath = preg_replace('#^/?storage/#', '', $rawPath);
+                            $rawPath = ltrim($rawPath, '/');
+
+                            $photoUrl = asset('storage/' . $rawPath);
+                            @endphp
                             @if($photoUrl)
                             <img src="{{ $photoUrl }}" width="150" class="img-thumbnail" alt="Student Photo">
                             @else

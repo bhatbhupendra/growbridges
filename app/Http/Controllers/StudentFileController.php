@@ -99,16 +99,7 @@ class StudentFileController extends Controller
             }
         }
 
-        $photoDocument = StudentDocument::query()
-            ->where('student_id', $student->id)
-            ->where('school_id', $school->id)
-            ->whereHas('documentType', function ($q) {
-                $q->whereIn('file_type', ['jpg', 'jpeg']);
-            })
-            ->latest()
-            ->first();
-
-        $photoUrl = $photoDocument ? Storage::url($photoDocument->file_path) : null;
+        $photoUrl = $student->photo ? Storage::url($student->photo) : null;
 
         return view('student.file', compact(
             'student',
@@ -182,7 +173,7 @@ class StudentFileController extends Controller
         $today = now()->format('Y-m-d');
 
         $finalFileName = "{$docNameSafe}_{$studentNameSafe}_{$today}.{$ext}";
-        $dir = "uploads/user_{$student->user_id}/student_{$student->id}";
+        $dir = "uploads/student_{$student->id}";
 
         if (Storage::disk('public')->exists("{$dir}/{$finalFileName}")) {
             $finalFileName = "{$docNameSafe}_{$studentNameSafe}_{$today}_" . time() . ".{$ext}";
@@ -219,6 +210,12 @@ class StudentFileController extends Controller
                 'file_path' => $storedPath,
                 'verify_status' => 'pending',
             ]);
+        }
+
+        // ✅ AUTO SET STUDENT PHOTO if the doc is image the saving that image to the student->photo
+        if (in_array(strtolower($docType->file_type), ['jpg', 'jpeg'])) {
+            $student->photo = $storedPath;
+            $student->save();
         }
 
         $this->notifyFileUpload($student, $school, $docType, $document);

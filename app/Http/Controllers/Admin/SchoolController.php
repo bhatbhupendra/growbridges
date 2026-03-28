@@ -116,21 +116,11 @@ class SchoolController extends Controller
                 ->reject(fn ($s) => in_array((int) $s->id, $assignedSchoolIds, true))
                 ->values();
 
-            $photoDocument = StudentDocument::query()
-                ->where('student_id', $student->id)
-                ->when($currentSchool, fn ($q) => $q->where('school_id', $currentSchool->id))
-                ->whereHas('documentType', function ($q) {
-                    $q->whereIn('file_type', ['jpg', 'jpeg']);
-                })
-                ->latest()
-                ->first();
-
             return [
                 'application' => $application,
                 'student' => $student,
                 'school' => $currentSchool,
                 'docs' => $docOutput,
-                'photo_url' => $photoDocument ? Storage::url($photoDocument->file_path) : null,
                 'available_schools' => $availableSchools,
             ];
         });

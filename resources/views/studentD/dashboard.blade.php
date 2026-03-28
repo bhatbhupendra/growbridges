@@ -115,7 +115,19 @@ body {
                 <div class="row g-3 align-items-start">
                     <div class="col-md-2">
                         <div class="profile-photo-box">
-                            {{ strtoupper(mb_substr($student->student_name ?: $user->name, 0, 1)) }}
+                           @php
+                                    $rawPath = trim((string)($student->photo ?? ''));
+                                    $rawPath = str_replace('\\', '/', $rawPath);
+                                    $rawPath = preg_replace('#^/?storage/#', '', $rawPath);
+                                    $rawPath = ltrim($rawPath, '/');
+
+                                    $fileUrl = asset('storage/' . $rawPath);
+                                    @endphp
+                                    @if($student['photo'])
+                                        <img src="{{ $fileUrl }}" class="thumb" alt="Student Photo">
+                                    @else
+                                        {{ strtoupper(mb_substr($student->student_name ?: $user->name, 0, 1)) }}
+                                    @endif
                         </div>
                     </div>
 
@@ -139,6 +151,9 @@ body {
                                     {{ $student->highest_qualification }}</div>
                                 <div class="info-line"><b>Japanese Level:</b> {{ $student->japanese_level }}</div>
                             </div>
+                        </div>
+                        <div class='row'>
+                        <a href="{{ route('student.edit', $student) }}" class="btn btn-sm btn-warning">Edit</a>
                         </div>
                     </div>
                 </div>

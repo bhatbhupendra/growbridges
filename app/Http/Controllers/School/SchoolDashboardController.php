@@ -37,16 +37,6 @@ class SchoolDashboardController extends Controller
             ->orderByDesc('students.intake')
             ->pluck('students.intake');
 
-        $agents = StudentSchoolApplication::query()
-            ->join('students', 'students.id', '=', 'student_school_applications.student_id')
-            ->join('users', 'users.id', '=', 'students.created_by')
-            ->where('student_school_applications.school_id', $school->id)
-            ->whereNull('students.deleted_at')
-            ->select('users.id', 'users.name')
-            ->distinct()
-            ->orderBy('users.name')
-            ->get();
-
         $applicationsQuery = StudentSchoolApplication::query()
             ->with(['student.creator', 'school'])
             ->where('school_id', $school->id)
@@ -102,20 +92,10 @@ class SchoolDashboardController extends Controller
                 ]);
             }
 
-            $photoDocument = StudentDocument::query()
-                ->where('student_id', $student->id)
-                ->where('school_id', $school->id)
-                ->whereHas('documentType', function ($q) {
-                    $q->whereIn('file_type', ['jpg', 'jpeg']);
-                })
-                ->latest()
-                ->first();
-
             return [
                 'application' => $application,
                 'student' => $student,
                 'docs' => $docOutput,
-                'photo_url' => $photoDocument ? Storage::url($photoDocument->file_path) : null,
             ];
         });
 
@@ -124,7 +104,6 @@ class SchoolDashboardController extends Controller
             'user' => $user,
             'rows' => $rows,
             'intakes' => $intakes,
-            'agents' => $agents,
             'selectedIntake' => $selectedIntake,
             'selectedAgent' => $selectedAgent,
             'selectedStatus' => $selectedStatus,
@@ -139,7 +118,10 @@ class SchoolDashboardController extends Controller
         abort_unless($user->school_id && (int) $application->school_id === (int) $user->school_id, 403);
 
         $data = $request->validate([
-            'status' => ['required', 'in:pending,accepted,rejected,enrolled'],
+            'status' => [
+                'required',
+                'in:interview,selected,rejected,coe-applied,coe-granted,coe-rejected,visa-granted,visa-rejected,withdrawal',
+            ],
         ]);
 
         $application->update([

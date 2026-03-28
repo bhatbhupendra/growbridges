@@ -145,6 +145,9 @@ body {
                         <a href="{{ route('student.create') }}" class="btn btn-sm btn-primary">
                             + Add Student
                         </a>
+                        @include('components.student-export-selected-modal', [
+                        'modalId' => 'schoolStudentExportSelectedModal'
+                        ])
                     </div>
                 </div>
 
@@ -192,6 +195,9 @@ body {
                     <table class="table table-bordered table-striped align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
+                                <th style="width:45px;" class="text-center">
+                                    <input type="checkbox" onchange="toggleAllStudentExportCheckboxes(this)">
+                                </th>
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
                                 <th style="width:170px;">School</th>
@@ -209,6 +215,10 @@ body {
                                 $activeSchool = $schools->firstWhere('id', $activeSchoolId) ?? $schools->first();
                             @endphp
                             <tr>
+                                <td class="text-center">
+                                    <input type="checkbox" class="student-export-checkbox" value="{{ $student->id }}"
+                                        onchange="updateSelectedStudentCount()">
+                                </td>
                                 <td>{{ $index + 1 }}</td>
 
                                 <td>
@@ -267,10 +277,18 @@ body {
                                 </td>
 
                                 <td class="text-center" id="photo-{{ $student->id }}">
-                                    @if($activeSchool && !empty($activeSchool['photo_url']))
-                                        <img src="{{ $activeSchool['photo_url'] }}" class="thumb" alt="Student Photo">
+                                    @php
+                                    $rawPath = trim((string)($student['photo'] ?? ''));
+                                    $rawPath = str_replace('\\', '/', $rawPath);
+                                    $rawPath = preg_replace('#^/?storage/#', '', $rawPath);
+                                    $rawPath = ltrim($rawPath, '/');
+
+                                    $fileUrl = asset('storage/' . $rawPath);
+                                    @endphp
+                                    @if($student['photo'])
+                                        <img src="{{ $fileUrl }}" class="thumb" alt="Student Photo">
                                     @else
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">No Photo</span>
                                     @endif
                                 </td>
 
@@ -301,7 +319,7 @@ body {
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center">No students found for this filter.</td>
+                                <td colspan="8" class="text-center">No students found for this filter.</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -444,15 +462,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }).join('');
                 } else {
                     docsEl.innerHTML = `<span class="text-muted">No required documents set.</span>`;
-                }
-            }
-
-            const photoEl = document.getElementById(`photo-${studentId}`);
-            if (photoEl) {
-                if (selected.photo_url) {
-                    photoEl.innerHTML = `<img src="${selected.photo_url}" class="thumb" alt="Student Photo">`;
-                } else {
-                    photoEl.innerHTML = `<span class="text-muted">—</span>`;
                 }
             }
 
