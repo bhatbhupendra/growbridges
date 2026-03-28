@@ -27,7 +27,29 @@ Route::get('/', function () {
 
 //admin manage users routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
-    Route::resource('manage-users', UserController::class);
+    // List users
+    Route::get('/manage-users', [UserController::class, 'index'])
+        ->name('manage-users.index');
+
+    // Create form
+    Route::get('/manage-users/create', [UserController::class, 'create'])
+        ->name('manage-users.create');
+
+    // Store user
+    Route::post('/manage-users', [UserController::class, 'store'])
+        ->name('manage-users.store');
+
+    // Edit form
+    Route::get('/manage-users/{user}/edit', [UserController::class, 'edit'])
+        ->name('manage-users.edit');
+
+    // Update user
+    Route::put('/manage-users/{user}', [UserController::class, 'update'])
+        ->name('manage-users.update');
+
+    // Delete user
+    Route::delete('/manage-users/{user}', [UserController::class, 'destroy'])
+        ->name('manage-users.destroy');
 });
 
 

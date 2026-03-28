@@ -3,27 +3,82 @@
 @section('content')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<div class="container">
-    <h3>Edit User</h3>
+<style>
+.page-container {
+    padding: 24px;
+}
 
-    <form method="POST" action="{{ route('manage-users.update', $user->id) }}">
-        @csrf
-        @method('PUT')
+.form-card {
+    max-width: 600px;
+    background: #fff;
+    padding: 28px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+}
 
-        <input type="text" name="name" value="{{ $user->name }}" class="form-control mb-2">
-        <input type="email" name="email" value="{{ $user->email }}" class="form-control mb-2">
+.form-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: #111827;
+}
 
-        <input type="password" name="password" placeholder="New Password (optional)" class="form-control mb-2">
+.form-control,
+.form-select {
+    border-radius: 10px;
+    padding: 11px 12px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+}
 
-        <select name="role" class="form-control mb-2">
-            <option value="user" {{ $user->role=='user' ? 'selected' : '' }}>User</option>
-            <option value="admin" {{ $user->role=='admin' ? 'selected' : '' }}>Admin</option>
-            <option value="owner" {{ $user->role=='owner' ? 'selected' : '' }}>Owner</option>
-        </select>
+.form-control:focus,
+.form-select:focus {
+    border-color: #312682;
+    box-shadow: 0 0 0 2px rgba(49, 38, 130, 0.08);
+}
 
-        <button class="btn btn-primary">Update</button>
-    </form>
+.btn-main {
+    background: #161616;
+    color: #fff;
+    border-radius: 10px;
+    padding: 12px;
+    font-weight: 700;
+    border: none;
+    transition: 0.2s ease;
+}
+
+.btn-main:hover {
+    background: #000;
+}
+</style>
+<div class="container page-container">
+
+    <div class="form-card">
+        <div class="form-title">Edit User</div>
+
+        <form method="POST" action="{{ route('manage-users.update', $user->id) }}">
+            @csrf
+            @method('PUT')
+
+            <input type="text" name="name" value="{{ $user->name }}" class="form-control mb-3">
+
+            <input type="email" name="email" value="{{ $user->email }}" class="form-control mb-3">
+
+            <input type="password" name="password" placeholder="New Password (optional)" class="form-control mb-3">
+
+            <select name="role" class="form-select mb-3">
+                <option value="user" {{ $user->role=='user' ? 'selected' : '' }}>User</option>
+                <option value="admin" {{ $user->role=='admin' ? 'selected' : '' }}>Admin</option>
+                <option value="school" {{ $user->role=='school' ? 'selected' : '' }}>School</option>
+                <option value="student" {{ $user->role=='student' ? 'selected' : '' }}>Student</option>
+            </select>
+
+            <button class="btn btn-main w-100">Update</button>
+        </form>
+    </div>
+
+
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 @endsection
