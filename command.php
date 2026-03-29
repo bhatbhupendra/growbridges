@@ -40,15 +40,14 @@ put public folder inside legendresources and legend.growbrideges.com
 
 APP_NAME=Laravel
 APP_ENV=local
-APP_KEY=base64:5emZJ9qwzUbOHDj4K5gzuDlxc6fDOYgTJfEWTiPX6gw=
+APP_KEY=base64:S7FVRDGWBNBeRW4bMsI0pwn/98+I3Rh/D1fsuv3zzf8=
 APP_DEBUG=true
-APP_ENV=production
 APP_URL=http://legend.growbridges.com
 
 DB_CONNECTION=mysql
 DB_HOST=legend.growbridges.com
 DB_PORT=3306
-DB_DATABASE=growbrid_legend
+DB_DATABASE=growbrid_growbridges
 DB_USERNAME=growbrid_bhat
 DB_PASSWORD=tmzrkXklE&pN7$}3
 

@@ -33,9 +33,9 @@ class StudentFileController extends Controller
             ->where('school_id', $school->id)
             ->get();
 
+        // CHANGED: student-based docs only
         $studentDocs = StudentDocument::with('documentType')
             ->where('student_id', $student->id)
-            ->where('school_id', $school->id)
             ->get()
             ->keyBy('doc_type_id');
 
@@ -130,7 +130,6 @@ class StudentFileController extends Controller
         abort_unless($applicationExists, 404);
 
         $existingApproved = StudentDocument::where('student_id', $student->id)
-            ->where('school_id', $school->id)
             ->where('doc_type_id', $docType->id)
             ->where('verify_status', 'approved')
             ->first();
@@ -182,7 +181,6 @@ class StudentFileController extends Controller
         $storedPath = $file->storeAs($dir, $finalFileName, 'public');
 
         $existing = StudentDocument::where('student_id', $student->id)
-            ->where('school_id', $school->id)
             ->where('doc_type_id', $docType->id)
             ->first();
 
@@ -204,7 +202,6 @@ class StudentFileController extends Controller
         } else {
             $document = StudentDocument::create([
                 'student_id' => $student->id,
-                'school_id' => $school->id,
                 'doc_type_id' => $docType->id,
                 'file_name' => $finalFileName,
                 'file_path' => $storedPath,
@@ -212,7 +209,7 @@ class StudentFileController extends Controller
             ]);
         }
 
-        // ✅ AUTO SET STUDENT PHOTO if the doc is image the saving that image to the student->photo
+        //saving photo the student->photo
         if (in_array(strtolower($docType->file_type), ['jpg', 'jpeg'])) {
             $student->photo = $storedPath;
             $student->save();
@@ -225,11 +222,12 @@ class StudentFileController extends Controller
             ->with('success', 'File uploaded successfully.');
     }
 
+
     public function verify(Request $request, Student $student, School $school, StudentDocument $document): RedirectResponse
     {
         abort_unless(Auth::user()->role === 'admin', 403);
 
-        if ($document->student_id !== $student->id || $document->school_id !== $school->id) {
+        if ($document->student_id !== $student->id) {
             abort(404);
         }
 
@@ -258,7 +256,7 @@ class StudentFileController extends Controller
 
         abort_unless(in_array($user->role, ['admin', 'agent'], true), 403);
 
-        if ($document->student_id !== $student->id || $document->school_id !== $school->id) {
+        if ($document->student_id !== $student->id) {
             abort(404);
         }
 

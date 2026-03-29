@@ -8,18 +8,18 @@ use App\Models\School;
 use App\Models\SchoolRequiredDoc;
 use App\Models\Student;
 use App\Models\StudentDocument;
-use App\Models\StudentSchoolApplication;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class AgentController extends Controller
 {
-    public function show(Request $request, User $agent): View{
+    public function show(Request $request, User $agent): View
+    {
         abort_unless(auth()->check() && auth()->user()->role === 'admin', 403);
+        abort_unless(in_array($agent->role, ['agent', 'user'], true), 404);
 
         $selectedIntake = trim((string) $request->query('intake', ''));
         $selectedSchool = trim((string) $request->query('school_id', 'all'));
@@ -34,9 +34,7 @@ class AgentController extends Controller
             ->pluck('intake');
 
         if ($selectedIntake === '') {
-            // $selectedIntake = $intakes->first() ?? 'all';
-            // default is all 
-            $selectedIntake ='all'; 
+            $selectedIntake = 'all';
         }
 
         $schools = School::query()
@@ -78,7 +76,16 @@ class AgentController extends Controller
                 ->filter(fn ($app) => $app->school)
                 ->values();
 
-            $schoolsData = $applications->map(function ($app) use ($student) {
+            // Global student documents, not school-based
+            $submittedDocTypeIds = StudentDocument::query()
+                ->where('student_id', $student->id)
+                ->pluck('doc_type_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $submittedDocTypeIds = array_flip($submittedDocTypeIds);
+
+            $schoolsData = $applications->map(function ($app) use ($student, $submittedDocTypeIds) {
                 $school = $app->school;
 
                 $docOutput = collect();
@@ -94,11 +101,7 @@ class AgentController extends Controller
                         continue;
                     }
 
-                    $submitted = StudentDocument::query()
-                        ->where('student_id', $student->id)
-                        ->where('school_id', $school->id)
-                        ->where('doc_type_id', $dt->id)
-                        ->exists();
+                    $submitted = isset($submittedDocTypeIds[(int) $dt->id]);
 
                     $docOutput->push([
                         'name' => $dt->doc_name,
@@ -141,7 +144,8 @@ class AgentController extends Controller
         ]);
     }
 
-    public function update(UpdateAgentRequest $request, User $agent): RedirectResponse{
+    public function update(UpdateAgentRequest $request, User $agent): RedirectResponse
+    {
         abort_unless(auth()->check() && auth()->user()->role === 'admin', 403);
         abort_unless(in_array($agent->role, ['agent', 'user'], true), 404);
 
@@ -161,7 +165,8 @@ class AgentController extends Controller
             ->with('success', 'Agent updated successfully!');
     }
 
-    public function destroy(User $agent): RedirectResponse{
+    public function destroy(User $agent): RedirectResponse
+    {
         abort_unless(auth()->check() && auth()->user()->role === 'admin', 403);
         abort_unless(in_array($agent->role, ['agent', 'user'], true), 404);
 
@@ -181,6 +186,4 @@ class AgentController extends Controller
             ->route('admin.dashboard')
             ->with('success', 'Agent deleted successfully.');
     }
-
-    
 }

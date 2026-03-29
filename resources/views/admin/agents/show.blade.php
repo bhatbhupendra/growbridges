@@ -143,7 +143,7 @@ body {
                     <h6 class="m-0" style="font-weight:800;">Students List</h6>
                     @include('components.student-export-selected-modal', [
                         'modalId' => 'schoolStudentExportSelectedModal'
-                        ])
+                    ])
                 </div>
 
                 <form method="GET" class="filter-bar row g-2 align-items-end mb-2">
@@ -152,9 +152,9 @@ body {
                         <select name="intake" class="form-select">
                             <option value="all" {{ $selectedIntake === 'all' ? 'selected' : '' }}>All intake</option>
                             @foreach($intakes as $intake)
-                            <option value="{{ $intake }}" {{ $selectedIntake === $intake ? 'selected' : '' }}>
-                                {{ $intake }}
-                            </option>
+                                <option value="{{ $intake }}" {{ $selectedIntake === $intake ? 'selected' : '' }}>
+                                    {{ $intake }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -164,10 +164,10 @@ body {
                         <select name="school_id" class="form-select">
                             <option value="all" {{ $selectedSchool === 'all' ? 'selected' : '' }}>All schools</option>
                             @foreach($schools as $school)
-                            <option value="{{ $school->id }}"
-                                {{ (string)$selectedSchool === (string)$school->id ? 'selected' : '' }}>
-                                {{ $school->name }}
-                            </option>
+                                <option value="{{ $school->id }}"
+                                    {{ (string) $selectedSchool === (string) $school->id ? 'selected' : '' }}>
+                                    {{ $school->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -203,119 +203,120 @@ body {
                         </thead>
                         <tbody>
                             @forelse($students as $index => $row)
-                            @php
-                                $student = $row['student'];
-                                $schools = collect($row['schools']);
-                                $activeSchoolId = $row['active_school_id'];
-                                $activeSchool = $schools->firstWhere('id', $activeSchoolId) ?? $schools->first();
-                            @endphp
-                            <tr>
-                                <td class="text-center">
-                                    <input type="checkbox" class="student-export-checkbox" value="{{ $student->id }}"
-                                        onchange="updateSelectedStudentCount()">
-                                </td>
-                                <td>{{ $index + 1 }}</td>
+                                @php
+                                    $student = $row['student'];
+                                    $schools = collect($row['schools']);
+                                    $activeSchoolId = $row['active_school_id'];
+                                    $activeSchool = $schools->firstWhere('id', $activeSchoolId) ?? $schools->first();
 
-                                <td>
-                                    <div class="student-name">
-                                        {{ $student->student_name }}
-                                        @if(!empty($student->student_name_jp))
-                                            <span class="text-primary">({{ $student->student_name_jp }})</span>
-                                        @endif
-                                    </div>
-                                    <div class="student-meta">
-                                        @if(!empty($student->gender))
-                                            <span class="badge badge-soft me-1">Gender: {{ $student->gender }}</span>
-                                        @endif
-                                        @if(!empty($student->nationality))
-                                            <span class="badge badge-soft me-1">Nationality: {{ $student->nationality }}</span>
-                                        @endif
-                                        @if(!empty($student->intake))
-                                            <span class="badge badge-soft me-1">Intake: {{ $student->intake }}</span>
-                                        @endif
-                                        @if(!empty($student->age))
-                                            Age: {{ $student->age }}
-                                        @endif
-                                    </div>
-                                </td>
+                                    $rawPhotoPath = trim((string) ($student->photo ?? ''));
+                                    $rawPhotoPath = str_replace('\\', '/', $rawPhotoPath);
+                                    $rawPhotoPath = preg_replace('#^/?storage/#', '', $rawPhotoPath);
+                                    $rawPhotoPath = ltrim($rawPhotoPath, '/');
+                                    $photoUrl = $rawPhotoPath !== '' ? asset('storage/' . $rawPhotoPath) : null;
+                                @endphp
 
-                                <td>
-                                    @if($schools->isEmpty())
-                                        <span class="text-muted">—</span>
-                                    @else
-                                        <div class="d-flex flex-wrap gap-1">
-                                            @foreach($schools as $schoolItem)
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-sm school-switch-btn {{ $activeSchool && $activeSchool['id'] == $schoolItem['id'] ? 'btn-primary' : 'btn-outline-primary' }}"
-                                                    data-student-id="{{ $student->id }}"
-                                                    data-school-id="{{ $schoolItem['id'] }}">
-                                                    {{ $schoolItem['name'] }}
-                                                </button>
-                                            @endforeach
+                                <tr>
+                                    <td class="text-center">
+                                        <input type="checkbox" class="student-export-checkbox" value="{{ $student->id }}"
+                                            onchange="updateSelectedStudentCount()">
+                                    </td>
+
+                                    <td>{{ $index + 1 }}</td>
+
+                                    <td>
+                                        <div class="student-name">
+                                            {{ $student->student_name }}
+                                            @if(!empty($student->student_name_jp))
+                                                <span class="text-primary">({{ $student->student_name_jp }})</span>
+                                            @endif
                                         </div>
-                                    @endif
-                                </td>
 
-                                <td>
-                                    <div class="doc-list" id="docs-{{ $student->id }}">
-                                        @if($activeSchool && !empty($activeSchool['docs']))
-                                            @foreach($activeSchool['docs'] as $doc)
-                                                <div class="{{ $doc['submitted'] ? 'doc-ok' : 'doc-miss' }}">
-                                                    {{ $doc['submitted'] ? '✔' : '✖' }} {{ $doc['name'] }}
-                                                </div>
-                                            @endforeach
+                                        <div class="student-meta">
+                                            @if(!empty($student->gender))
+                                                <span class="badge badge-soft me-1">Gender: {{ $student->gender }}</span>
+                                            @endif
+                                            @if(!empty($student->nationality))
+                                                <span class="badge badge-soft me-1">Nationality: {{ $student->nationality }}</span>
+                                            @endif
+                                            @if(!empty($student->intake))
+                                                <span class="badge badge-soft me-1">Intake: {{ $student->intake }}</span>
+                                            @endif
+                                            @if(!empty($student->age))
+                                                Age: {{ $student->age }}
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        @if($schools->isEmpty())
+                                            <span class="text-muted">—</span>
                                         @else
-                                            <span class="text-muted">No required documents set.</span>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach($schools as $schoolItem)
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm school-switch-btn {{ $activeSchool && $activeSchool['id'] == $schoolItem['id'] ? 'btn-primary' : 'btn-outline-primary' }}"
+                                                        data-student-id="{{ $student->id }}"
+                                                        data-school-id="{{ $schoolItem['id'] }}">
+                                                        {{ $schoolItem['name'] }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
                                         @endif
-                                    </div>
-                                </td>
+                                    </td>
 
-                                <td class="text-center" id="photo-{{ $student->id }}">
-                                    @php
-                                    $rawPath = trim((string)($student['photo'] ?? ''));
-                                    $rawPath = str_replace('\\', '/', $rawPath);
-                                    $rawPath = preg_replace('#^/?storage/#', '', $rawPath);
-                                    $rawPath = ltrim($rawPath, '/');
+                                    <td>
+                                        <div class="doc-list" id="docs-{{ $student->id }}">
+                                            @if($activeSchool && !empty($activeSchool['docs']))
+                                                @foreach($activeSchool['docs'] as $doc)
+                                                    <div class="{{ $doc['submitted'] ? 'doc-ok' : 'doc-miss' }}">
+                                                        {{ $doc['submitted'] ? '✔' : '✖' }} {{ $doc['name'] }}
+                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <span class="text-muted">No required documents set.</span>
+                                            @endif
+                                        </div>
+                                    </td>
 
-                                    $fileUrl = asset('storage/' . $rawPath);
-                                    @endphp
-                                    @if($student['photo'])
-                                        <img src="{{ $fileUrl }}" class="thumb" alt="Student Photo">
-                                    @else
-                                        <span class="text-muted">No Photo</span>
-                                    @endif
-                                </td>
+                                    <td class="text-center" id="photo-{{ $student->id }}">
+                                        @if($photoUrl)
+                                            <img src="{{ $photoUrl }}" class="thumb" alt="Student Photo">
+                                        @else
+                                            <span class="text-muted">No Photo</span>
+                                        @endif
+                                    </td>
 
-                                <td>
-                                    <a href="{{ $activeSchool['view_url'] ?? '#' }}"
-                                        id="view-btn-{{ $student->id }}"
-                                        class="btn btn-sm btn-success w-100 mb-1 {{ $activeSchool ? '' : 'disabled' }}">
-                                        View Student
-                                    </a>
+                                    <td>
+                                        <a href="{{ $activeSchool['view_url'] ?? '#' }}"
+                                            id="view-btn-{{ $student->id }}"
+                                            class="btn btn-sm btn-success w-100 mb-1 {{ $activeSchool ? '' : 'disabled' }}">
+                                            View Student
+                                        </a>
 
-                                    <a href="{{ route('student.zip', $student) }}" class="btn btn-sm btn-primary w-100 mb-1">
-                                        ZIP FILES
-                                    </a>
+                                        <a href="{{ route('student.zip', $student) }}" class="btn btn-sm btn-primary w-100 mb-1">
+                                            ZIP FILES
+                                        </a>
 
-                                    <form method="POST" action="{{ route('student.destroy', $student) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100"
-                                            onclick="return confirm('Move this student to recycle bin?')">
-                                            Delete Student
-                                        </button>
-                                    </form>
+                                        <form method="POST" action="{{ route('student.destroy', $student) }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger w-100"
+                                                onclick="return confirm('Move this student to recycle bin?')">
+                                                Delete Student
+                                            </button>
+                                        </form>
 
-                                    <script type="application/json" id="student-school-data-{{ $student->id }}">
-                                        @json($schools->values())
-                                    </script>
-                                </td>
-                            </tr>
+                                        <script type="application/json" id="student-school-data-{{ $student->id }}">
+                                            @json($schools->values())
+                                        </script>
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="6" class="text-center">No students found for this filter.</td>
-                            </tr>
+                                <tr>
+                                    <td colspan="7" class="text-center">No students found for this filter.</td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -451,6 +452,7 @@ body {
     <div>{{ session('error') ?: 'Please check the form.' }}</div>
 </div>
 @endif
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -499,7 +501,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const viewBtn = document.getElementById(`view-btn-${studentId}`);
             if (viewBtn) {
                 viewBtn.href = selected.view_url || '#';
-                viewBtn.classList.remove('disabled');
+                if (selected.view_url) {
+                    viewBtn.classList.remove('disabled');
+                } else {
+                    viewBtn.classList.add('disabled');
+                }
             }
         });
     });

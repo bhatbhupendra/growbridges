@@ -64,6 +64,7 @@ body {
 
 .thumb {
     width: 120px;
+    height: 120px;
     object-fit: cover;
     border-radius: 10px;
     border: 1px solid #ddd;
@@ -157,7 +158,7 @@ body {
                         </span>
 
                         @include('components.student-export-selected-modal', [
-                        'modalId' => 'schoolStudentExportSelectedModal'
+                            'modalId' => 'schoolStudentExportSelectedModal'
                         ])
                     </div>
                 </div>
@@ -168,9 +169,36 @@ body {
                         <select name="intake" class="form-select">
                             <option value="all" {{ $selectedIntake === 'all' ? 'selected' : '' }}>All intake</option>
                             @foreach($intakes as $intake)
-                            <option value="{{ $intake }}" {{ $selectedIntake === $intake ? 'selected' : '' }}>
-                                {{ $intake }}
+                                <option value="{{ $intake }}" {{ $selectedIntake === $intake ? 'selected' : '' }}>
+                                    {{ $intake }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Nationality</label>
+                        <select name="nationality" class="form-select">
+                            <option value="all" {{ $selectedNationality === 'all' ? 'selected' : '' }}>
+                                All nationality
                             </option>
+
+                            @foreach($nationalities as $nat)
+                                <option value="{{ $nat }}" {{ $selectedNationality === $nat ? 'selected' : '' }}>
+                                    {{ $nat }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Agent</label>
+                        <select name="agent_id" class="form-select">
+                            <option value="all" {{ $selectedAgent === 'all' ? 'selected' : '' }}>All agents</option>
+                            @foreach($agents as $agent)
+                                <option value="{{ $agent->id }}" {{ (string) $selectedAgent === (string) $agent->id ? 'selected' : '' }}>
+                                    {{ $agent->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -179,33 +207,15 @@ body {
                         <label class="form-label fw-bold">Status</label>
                         <select name="status" class="form-select">
                             <option value="all" {{ $selectedStatus === 'all' ? 'selected' : '' }}>All status</option>
-                            <option value="interview" {{ $selectedStatus === 'interview' ? 'selected' : '' }}>
-                                School want to interview
-                            </option>
-                            <option value="selected" {{ $selectedStatus === 'selected' ? 'selected' : '' }}>
-                                Selected
-                            </option>
-                            <option value="rejected" {{ $selectedStatus === 'rejected' ? 'selected' : '' }}>
-                                Rejected
-                            </option>
-                            <option value="coe-applied" {{ $selectedStatus === 'coe-applied' ? 'selected' : '' }}>
-                                COE Applied
-                            </option>
-                            <option value="coe-granted" {{ $selectedStatus === 'coe-granted' ? 'selected' : '' }}>
-                                COE Granted
-                            </option>
-                            <option value="coe-rejected" {{ $selectedStatus === 'coe-rejected' ? 'selected' : '' }}>
-                                COE Rejected
-                            </option>
-                            <option value="visa-granted" {{ $selectedStatus === 'visa-granted' ? 'selected' : '' }}>
-                                Visa Granted
-                            </option>
-                            <option value="visa-rejected" {{ $selectedStatus === 'visa-rejected' ? 'selected' : '' }}>
-                                Visa Rejected
-                            </option>
-                            <option value="withdrawal" {{ $selectedStatus === 'withdrawal' ? 'selected' : '' }}>
-                                Withdrawal
-                            </option>
+                            <option value="interview" {{ $selectedStatus === 'interview' ? 'selected' : '' }}>School want to interview</option>
+                            <option value="selected" {{ $selectedStatus === 'selected' ? 'selected' : '' }}>Selected</option>
+                            <option value="rejected" {{ $selectedStatus === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                            <option value="coe-applied" {{ $selectedStatus === 'coe-applied' ? 'selected' : '' }}>COE Applied</option>
+                            <option value="coe-granted" {{ $selectedStatus === 'coe-granted' ? 'selected' : '' }}>COE Granted</option>
+                            <option value="coe-rejected" {{ $selectedStatus === 'coe-rejected' ? 'selected' : '' }}>COE Rejected</option>
+                            <option value="visa-granted" {{ $selectedStatus === 'visa-granted' ? 'selected' : '' }}>Visa Granted</option>
+                            <option value="visa-rejected" {{ $selectedStatus === 'visa-rejected' ? 'selected' : '' }}>Visa Rejected</option>
+                            <option value="withdrawal" {{ $selectedStatus === 'withdrawal' ? 'selected' : '' }}>Withdrawal</option>
                         </select>
                     </div>
 
@@ -231,125 +241,148 @@ body {
                         </thead>
                         <tbody>
                             @forelse($rows as $index => $row)
-                            @php
-                            $application = $row['application'];
-                            $student = $row['student'];
-                            $status = strtolower($application->status ?? 'pending');
-                            $chipClass = match($status) {
-                            'accepted' => 'chip-accepted',
-                            'rejected' => 'chip-rejected',
-                            'enrolled' => 'chip-enrolled',
-                            default => 'chip-pending',
-                            };
-                            @endphp
-                            <tr>
-                                <td class="text-center">
-                                    <input type="checkbox" class="student-export-checkbox" value="{{ $student->id }}"
-                                        onchange="updateSelectedStudentCount()">
-                                </td>
-                                <td>{{ $index + 1 }}</td>
-                                <td>
-                                    <div class="student-name">
-                                        {{ $student->student_name }}
-                                        @if(!empty($student->student_name_jp))
-                                        <span class="text-primary">({{ $student->student_name_jp }})</span>
-                                        @endif
-                                    </div>
-                                    <div class="student-meta">
-                                        @if(!empty($student->gender))
-                                        <span class="badge badge-soft me-1">Gender: {{ $student->gender }}</span>
-                                        @endif
-                                        @if(!empty($student->nationality))
-                                        <span class="badge badge-soft me-1">Nationality:
-                                            {{ $student->nationality }}</span>
-                                        @endif
-                                        @if(!empty($student->intake))
-                                        <span class="badge badge-soft me-1">Intake: {{ $student->intake }}</span>
-                                        @endif
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="doc-list">
-                                        @if($row['docs']->isEmpty())
-                                        <span class="text-muted">No required documents set.</span>
-                                        @else
-                                        @foreach($row['docs'] as $doc)
-                                        <div class="{{ $doc['submitted'] ? 'doc-ok' : 'doc-miss' }}">
-                                            {{ $doc['submitted'] ? '✔' : '✖' }} {{ $doc['name'] }}
-                                        </div>
-                                        @endforeach
-                                        @endif
-                                    </div>
-                                </td>
+                                @php
+                                    $application = $row['application'];
+                                    $student = $row['student'];
+                                    $status = strtolower($application->status ?? '');
 
-                                <td>
-                                    @php
-                                    $rawPath = trim((string)($student['photo'] ?? ''));
+                                    $chipClass = match($status) {
+                                        'interview' => 'chip-pending',
+                                        'selected' => 'chip-accepted',
+                                        'rejected' => 'chip-rejected',
+                                        'coe-applied' => 'chip-pending',
+                                        'coe-granted' => 'chip-accepted',
+                                        'coe-rejected' => 'chip-rejected',
+                                        'visa-granted' => 'chip-enrolled',
+                                        'visa-rejected' => 'chip-rejected',
+                                        'withdrawal' => 'chip-rejected',
+                                        default => 'chip-pending',
+                                    };
+
+                                    $rawPath = trim((string) ($student->photo ?? ''));
                                     $rawPath = str_replace('\\', '/', $rawPath);
                                     $rawPath = preg_replace('#^/?storage/#', '', $rawPath);
                                     $rawPath = ltrim($rawPath, '/');
+                                    $fileUrl = $rawPath !== '' ? asset('storage/' . $rawPath) : null;
+                                @endphp
 
-                                    $fileUrl = asset('storage/' . $rawPath);
-                                    @endphp
-                                    @if($fileUrl)
-                                    <img src="{{ $fileUrl }}" alt="Student Photo" class="thumb">
-                                    @else
-                                    <span class="text-muted">No photo</span>
-                                    @endif
-                                </td>
+                                <tr>
+                                    <td class="text-center">
+                                        <input
+                                            type="checkbox"
+                                            class="student-export-checkbox"
+                                            value="{{ $student->id }}"
+                                            onchange="updateSelectedStudentCount()"
+                                        >
+                                    </td>
 
-                                <td>
-                                    <span class="status-chip {{ $chipClass }}">
-                                        {{ strtoupper($application->status ?? 'pending') }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="{{ route('student.file.show', [$student, $school]) }}"
-                                        class="btn btn-sm btn-primary w-100 mb-1">
-                                        Open File
-                                    </a>
+                                    <td>{{ $index + 1 }}</td>
 
-                                    <form method="POST"
-                                        action="{{ route('school.applications.status', $application) }}">
-                                        @csrf
-                                        <select name="status" class="form-select form-select-sm mb-1">
-                                            <option>Select a Status</option>
-                                            <option value="interview"
-                                                {{ $application->status === 'interview' ? 'selected' : '' }}>School want to interview
-                                            </option>
-                                            <option value="selected"
-                                                {{ $application->status === 'selected' ? 'selected' : '' }}>Selected
-                                            </option>
-                                            <option value="rejected"
-                                                {{ $application->status === 'rejected' ? 'selected' : '' }}>Rejected
-                                            </option>
-                                            <option value="coe-applied"
-                                                {{ $application->status === 'coe-applied' ? 'selected' : '' }}>COE Applied
-                                            </option>
-                                            <option value="coe-granted"
-                                                {{ $application->status === 'coe-granted' ? 'selected' : '' }}>COE Granted
-                                            </option>
-                                            <option value="coe-rejected"
-                                                {{ $application->status === 'coe-rejected' ? 'selected' : '' }}>COE Rejected
-                                            </option>
-                                            <option value="visa-granted"
-                                                {{ $application->status === 'visa-granted' ? 'selected' : '' }}>Visa Granted
-                                            </option>
-                                            <option value="visa-rejected"
-                                                {{ $application->status === 'visa-rejected' ? 'selected' : '' }}>Visa Rejected
-                                            </option>
-                                            <option value="withdrawal"
-                                                {{ $application->status === 'withdrawal' ? 'selected' : '' }}>Withdrawal
-                                            </option>
-                                        </select>
-                                        <button class="btn btn-sm btn-outline-dark w-100">Update Status</button>
-                                    </form>
-                                </td>
-                            </tr>
+                                    <td>
+                                        <div class="student-name">
+                                            {{ $student->student_name }}
+                                            @if(!empty($student->student_name_jp))
+                                                <span class="text-primary">({{ $student->student_name_jp }})</span>
+                                            @endif
+                                        </div>
+
+                                        <div class="student-meta mt-1">
+                                            @if(!empty($student->gender))
+                                                <span class="badge badge-soft me-1">Gender: {{ $student->gender }}</span>
+                                            @endif
+
+                                            @if(!empty($student->nationality))
+                                                <span class="badge badge-soft me-1">Nationality: {{ $student->nationality }}</span>
+                                            @endif
+
+                                            @if(!empty($student->intake))
+                                                <span class="badge badge-soft me-1">Intake: {{ $student->intake }}</span>
+                                            @endif
+
+                                            @if($student->creator)
+                                                <span class="badge badge-soft me-1">Agent: {{ $student->creator->name }}</span>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="doc-list">
+                                            @if($row['docs']->isEmpty())
+                                                <span class="text-muted">No required documents set.</span>
+                                            @else
+                                                @foreach($row['docs'] as $doc)
+                                                    <div class="{{ $doc['submitted'] ? 'doc-ok' : 'doc-miss' }}">
+                                                        {{ $doc['submitted'] ? '✔' : '✖' }} {{ $doc['name'] }}
+                                                    </div>
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        @if($fileUrl)
+                                            <img src="{{ $fileUrl }}" alt="Student Photo" class="thumb">
+                                        @else
+                                            <span class="text-muted">No photo</span>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        <span class="status-chip {{ $chipClass }}">
+                                            {{ strtoupper($application->status ?? 'pending') }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <a href="{{ route('student.file.show', [$student, $school]) }}"
+                                            class="btn btn-sm btn-primary w-100 mb-1">
+                                            Open File
+                                        </a>
+
+                                        <form method="POST" action="{{ route('school.applications.status', $application) }}">
+                                            @csrf
+
+                                            <select name="status" class="form-select form-select-sm mb-1" required>
+                                                <option value="" disabled {{ empty($application->status) ? 'selected' : '' }}>
+                                                    Select a Status
+                                                </option>
+                                                <option value="interview" {{ $application->status === 'interview' ? 'selected' : '' }}>
+                                                    School want to interview
+                                                </option>
+                                                <option value="selected" {{ $application->status === 'selected' ? 'selected' : '' }}>
+                                                    Selected
+                                                </option>
+                                                <option value="rejected" {{ $application->status === 'rejected' ? 'selected' : '' }}>
+                                                    Rejected
+                                                </option>
+                                                <option value="coe-applied" {{ $application->status === 'coe-applied' ? 'selected' : '' }}>
+                                                    COE Applied
+                                                </option>
+                                                <option value="coe-granted" {{ $application->status === 'coe-granted' ? 'selected' : '' }}>
+                                                    COE Granted
+                                                </option>
+                                                <option value="coe-rejected" {{ $application->status === 'coe-rejected' ? 'selected' : '' }}>
+                                                    COE Rejected
+                                                </option>
+                                                <option value="visa-granted" {{ $application->status === 'visa-granted' ? 'selected' : '' }}>
+                                                    Visa Granted
+                                                </option>
+                                                <option value="visa-rejected" {{ $application->status === 'visa-rejected' ? 'selected' : '' }}>
+                                                    Visa Rejected
+                                                </option>
+                                                <option value="withdrawal" {{ $application->status === 'withdrawal' ? 'selected' : '' }}>
+                                                    Withdrawal
+                                                </option>
+                                            </select>
+
+                                            <button class="btn btn-sm btn-outline-dark w-100">Update Status</button>
+                                        </form>
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="8" class="text-center">No assigned students found.</td>
-                            </tr>
+                                <tr>
+                                    <td colspan="7" class="text-center">No assigned students found.</td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -379,27 +412,28 @@ body {
 </div>
 
 @if(session('success'))
-<div id="toastMsg" class="toast-pop" style="background:#198754; color:#fff;">
-    <div style="font-weight:900;">Success</div>
-    <div>{{ session('success') }}</div>
-</div>
+    <div id="toastMsg" class="toast-pop" style="background:#198754; color:#fff;">
+        <div style="font-weight:900;">Success</div>
+        <div>{{ session('success') }}</div>
+    </div>
 @endif
 
 @if(session('error') || $errors->any())
-<div id="toastMsg" class="toast-pop" style="background:#dc3545; color:#fff;">
-    <div style="font-weight:900;">Error</div>
-    <div>{{ session('error') ?: 'Please check the form.' }}</div>
-</div>
+    <div id="toastMsg" class="toast-pop" style="background:#dc3545; color:#fff;">
+        <div style="font-weight:900;">Error</div>
+        <div>{{ session('error') ?: 'Please check the form.' }}</div>
+    </div>
 @endif
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const t = document.getElementById("toastMsg");
+document.addEventListener('DOMContentLoaded', function () {
+    const t = document.getElementById('toastMsg');
     if (t) {
-        t.style.display = "block";
+        t.style.display = 'block';
         setTimeout(() => {
-            t.style.display = "none";
+            t.style.display = 'none';
         }, 3500);
     }
 });

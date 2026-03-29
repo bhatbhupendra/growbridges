@@ -680,7 +680,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const chatForm = document.getElementById('chatForm');
             chatForm.action =
-                "{{ url('/students/' . $student->id . '/file/' . $school->id . '/chat') }}/" +
+                "{{ url('/student/' . $student->id . '/file/' . $school->id . '/chat') }}/" +
                 docId;
 
             const raw = document.getElementById('chatData_' + docId)?.textContent || '';

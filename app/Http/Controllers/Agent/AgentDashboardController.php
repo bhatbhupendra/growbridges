@@ -11,7 +11,6 @@ use App\Models\StudentDocument;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class AgentDashboardController extends Controller
@@ -35,7 +34,6 @@ class AgentDashboardController extends Controller
             ->pluck('intake');
 
         if ($selectedIntake === '') {
-            // $selectedIntake = $intakes->first() ?? 'all';
             $selectedIntake = 'all';
         }
 
@@ -78,7 +76,16 @@ class AgentDashboardController extends Controller
                 ->filter(fn ($app) => $app->school)
                 ->values();
 
-            $schoolsData = $applications->map(function ($app) use ($student) {
+            // GLOBAL student documents, not school-specific
+            $submittedDocTypeIds = StudentDocument::query()
+                ->where('student_id', $student->id)
+                ->pluck('doc_type_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $submittedDocTypeIds = array_flip($submittedDocTypeIds);
+
+            $schoolsData = $applications->map(function ($app) use ($student, $submittedDocTypeIds) {
                 $school = $app->school;
 
                 $docOutput = collect();
@@ -94,11 +101,7 @@ class AgentDashboardController extends Controller
                         continue;
                     }
 
-                    $submitted = StudentDocument::query()
-                        ->where('student_id', $student->id)
-                        ->where('school_id', $school->id)
-                        ->where('doc_type_id', $dt->id)
-                        ->exists();
+                    $submitted = isset($submittedDocTypeIds[(int) $dt->id]);
 
                     $docOutput->push([
                         'name' => $dt->doc_name,

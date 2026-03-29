@@ -299,7 +299,6 @@
                     </div>
                     <div class="brand-title-wrap">
                         <h1>Grow Bridges Pvt. Ltd.</h1>
-                        <div class="brand-subtitle">グロウ・ブリッジズ株式会社</div>
                         <div class="brand-subtitle">Connecting to Grow</div>
                     </div>
                 </div>
@@ -307,20 +306,15 @@
                 <div class="info-list">
                     <div class="info-item">
                         <div class="info-icon">📍</div>
-                        <div><strong>Nepal Office</strong> Warabi, Saitama, Japan / +81-80-1234-5678 /
+                        <div><strong>Japan Office</strong> Tokeyo, Japan / +81-80-1234-5678 /
                             info@growbridges.com</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-icon">📍</div>
-                        <div><strong>Japan Office</strong> Putalisadak, Kathmandu, Nepal / +977-9812345678 /
-                            support@growbridges.com</div>
                     </div>
                 </div>
 
                 <div class="feature-box">
                     <div class="feature-card">
                         <h3>About Grow Bridges pvt. ltd.</h3>
-                        <p>GrowBridges Pvt. Ltd. is a Nepal–Japan based support and placement company dedicated to
+                        <p>GrowBridges Pvt. Ltd. is a Japan based support and placement company dedicated to
                             international students.</p>
                     </div>
                     <div class="feature-card">

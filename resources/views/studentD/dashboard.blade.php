@@ -113,48 +113,88 @@ body {
 
             <div class="card-box">
                 <div class="row g-3 align-items-start">
-                    <div class="col-md-2">
-                        <div class="profile-photo-box">
-                           @php
-                                    $rawPath = trim((string)($student->photo ?? ''));
+                    <div class="col-md-10">
+                        <div class='row'>
+                            <b class='col'>Info</b>
+                            <div class='col'>
+                                <a href="{{ route('student.edit', $student) }}" class="btn btn-sm btn-warning">Edit</a>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <div><b><u>Personal Information</u></b></div>
+                                <div><b>Name:</b> {{ $student->student_name }} ({{ $student->student_name_jp }})</div>
+                                <div><b>Gender:</b> {{ $student->gender }}</div>
+                                <div><b>DOB:</b> {{ $student->dob?->format('Y-m-d') }} ({{ $student->age }})</div>
+                                <div><b>Nationality:</b> {{ $student->nationality }}</div>
+                                <div><b>Intake:</b> {{ $student->intake }}</div>
+                                <div><b>School:</b> {{ $student->name }}</div>
+                                <div><b>Marital Status:</b> {{ $student->marital_status }}</div>
+                                <div><b>Email:</b> {{ $student->email }}</div>
+                                <div><b>Phone:</b> {{ $student->phone }}</div>
+                                <div><b>Permanent Address:</b> {{ $student->permanent_address }}</div>
+                                <div><b>Current Address:</b> {{ $student->current_address }}</div>
+                                <div><b><u>Family Information</u></b></div>
+                                <div><b>Father Name:</b> {{ $student->father_name }}</div>
+                                <div><b>Father Occupation:</b> {{ $student->father_occupation }}</div>
+                                <div><b>Mother Name:</b> {{ $student->mother_name }}</div>
+                                <div><b>Mother Occupation:</b> {{ $student->mother_occupation }}</div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <div><b><u>Academics Information</u></b></div>
+                                <div><b>Highest Qualification:</b> {{ $student->highest_qualification }}</div>
+                                <div><b>Last Institution:</b> {{ $student->last_institution_name }}</div>
+                                <div><b>Graduate Year:</b> {{ $student->graduation_year }}</div>
+                                <div><b>Academic Gap:</b> {{ $student->academic_gap_years }}</div>
+                                <div><b><u>Japanese Language Information</u></b></div>
+                                <div><b>Level:</b> {{ $student->japanese_level }}</div>
+                                <div><b>Test Type:</b> {{ $student->japanese_test_type }}</div>
+                                <div><b>Exam Score:</b> {{ $student->japanese_exam_score }}</div>
+                                <div><b>Exam Date:</b> {{ $student->japanese_exam_date?->format('Y-m-d') }}</div>
+                                <div><b>Training Hours:</b> {{ $student->japanese_training_hours }}</div>
+                                <div><b><u>Passport Information</u></b></div>
+                                <div><b>Number:</b> {{ $student->passport_number }}</div>
+                                <div><b>Issue Date:</b> {{ $student->passport_issue_date?->format('Y-m-d') }}</div>
+                                <div><b>Expiry Date:</b> {{ $student->passport_expiry_date?->format('Y-m-d') }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div><b><u>Sponsor 1 Information</u></b></div>
+                                <div><b>Name:</b> {{ $student->sponsor_name_1 }}</div>
+                                <div><b>Relationship:</b> {{ $student->sponsor_relationship_1 }}</div>
+                                <div><b>Occupation:</b> {{ $student->sponsor_occupation_1 }}</div>
+                                <div><b>Annual Income:</b> {{ $student->sponsor_annual_income_1 }}</div>
+                                <div><b>Saving Amount:</b> {{ $student->sponsor_savings_amount_1 }}</div>
+
+                                <div><b><u>Sponsor 2 Information</u></b></div>
+                                <div><b>Name:</b> {{ $student->sponsor_name_2 }}</div>
+                                <div><b>Relationship:</b> {{ $student->sponsor_relationship_2 }}</div>
+                                <div><b>Occupation:</b> {{ $student->sponsor_occupation_2 }}</div>
+                                <div><b>Annual Income:</b> {{ $student->sponsor_annual_income_2 }}</div>
+                                <div><b>Saving Amount:</b> {{ $student->sponsor_savings_amount_2 }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <div><b><u>Photo</u></b></div>
+                                <div>
+                                    @php
+                                    $rawPath = trim((string)($photoUrl ?? ''));
                                     $rawPath = str_replace('\\', '/', $rawPath);
                                     $rawPath = preg_replace('#^/?storage/#', '', $rawPath);
                                     $rawPath = ltrim($rawPath, '/');
 
-                                    $fileUrl = asset('storage/' . $rawPath);
+                                    $photoUrl = asset('storage/' . $rawPath);
                                     @endphp
-                                    @if($student['photo'])
-                                        <img src="{{ $fileUrl }}" class="thumb" alt="Student Photo">
+                                    @if($photoUrl)
+                                    <img src="{{ $photoUrl }}" width="150" class="img-thumbnail" alt="Student Photo">
                                     @else
-                                        {{ strtoupper(mb_substr($student->student_name ?: $user->name, 0, 1)) }}
+                                    <span class="text-muted">No Photo to Preview</span>
                                     @endif
-                        </div>
-                    </div>
-
-                    <div class="col-md-10">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="info-line"><b>Name:</b> {{ $student->student_name }}</div>
-                                <div class="info-line"><b>JP Name:</b> {{ $student->student_name_jp }}</div>
-                                <div class="info-line"><b>Email:</b> {{ $student->email ?: $user->email }}</div>
-                                <div class="info-line"><b>Phone:</b> {{ $student->phone }}</div>
-                                <div class="info-line"><b>Gender:</b> {{ $student->gender }}</div>
-                                <div class="info-line"><b>Nationality:</b> {{ $student->nationality }}</div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="info-line"><b>DOB:</b> {{ $student->dob?->format('Y-m-d') }}</div>
-                                <div class="info-line"><b>Age:</b> {{ $student->age }}</div>
-                                <div class="info-line"><b>Intake:</b> {{ $student->intake }}</div>
-                                <div class="info-line"><b>Passport No:</b> {{ $student->passport_number }}</div>
-                                <div class="info-line"><b>Highest Qualification:</b>
-                                    {{ $student->highest_qualification }}</div>
-                                <div class="info-line"><b>Japanese Level:</b> {{ $student->japanese_level }}</div>
+                                </div>
+                                <div class="mt-2"><b>Information:</b> {{ $student->information }}</div>
+                                <div><b>Career Path:</b> {{ $student->career_path }}</div>
                             </div>
                         </div>
-                        <div class='row'>
-                        <a href="{{ route('student.edit', $student) }}" class="btn btn-sm btn-warning">Edit</a>
-                        </div>
+                        
                     </div>
                 </div>
             </div>

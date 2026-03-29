@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
-            $table->foreignId('school_id')->constrained('schools')->cascadeOnDelete();
+            $table->foreignId('school_id')->nullable()->constrained('schools')->cascadeOnDelete();
             $table->foreignId('doc_type_id')->constrained('document_types')->cascadeOnDelete();
 
             $table->string('file_name')->nullable();

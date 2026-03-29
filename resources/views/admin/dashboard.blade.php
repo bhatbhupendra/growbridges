@@ -219,10 +219,6 @@ body {
                     <a href="{{ route('admin.school-requirements.index') }}" class="btn btn-outline-primary btn-sm">
                         Configure School Requirements
                     </a>
-
-                    <a href="{{ url('/register') }}" class="btn btn-primary btn-sm">
-                        Register New User / Agent
-                    </a>
                 </div>
 
                 <hr class="my-3">

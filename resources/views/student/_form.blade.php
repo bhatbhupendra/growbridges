@@ -4,7 +4,7 @@
         <label class="form-label">Intake <span class="req">*</span></label>
         <select name="intake" class="form-select" required>
             <option value="">Required Intake</option>
-            @foreach (['2026-01(January)', '2026-04(April)', '2026-07(July)', '2026-10(October)'] as $intake)
+            @foreach (['2026-04(April)', '2026-07(July)', '2026-10(October)',2027-1(January)','2027-04(April)', '2027-07(July)', '2027-10(October)'] as $intake)
             <option value="{{ $intake }}" {{ old('intake', $student->intake ?? '') == $intake ? 'selected' : '' }}>
                 {{ $intake }}
             </option>
