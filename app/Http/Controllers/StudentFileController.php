@@ -46,9 +46,9 @@ class StudentFileController extends Controller
             'Identity',
             'Educational',
             'Language',
-            'JAPANESE TRANSLATED DOCUMENTS',
             'Financial',
             'Study Plan',
+            'JAPANESE TRANSLATED DOCUMENTS',
             'Additional',
         ];
 
@@ -254,7 +254,7 @@ class StudentFileController extends Controller
     {
         $user = Auth::user();
 
-        abort_unless(in_array($user->role, ['admin', 'agent'], true), 403);
+        abort_unless(in_array($user->role, ['admin', 'agent','school','student'], true), 403);
 
         if ($document->student_id !== $student->id) {
             abort(404);
@@ -264,7 +264,16 @@ class StudentFileController extends Controller
             'chat_message' => ['required', 'string'],
         ]);
 
-        $sender = $user->role === 'admin' ? 'ADMIN' : 'AGENT';
+        $sender = 'UNKNOWN';
+        if ($user->role === 'student') {
+            $sender = 'STUDENT';
+        } elseif ($user->role === 'school') {
+            $sender = 'SCHOOL';
+        }elseif ($user->role === 'agent') {
+            $sender = 'AGENT';
+        }elseif ($user->role === 'admin') {
+            $sender = 'ADMIN';
+        }
         $line = '[' . now()->format('Y-m-d H:i') . '] ' . $sender . ': ' . str_replace(["\r\n", "\r"], "\n", trim($data['chat_message']));
 
         $chat = DocumentLiveChat::firstOrNew([

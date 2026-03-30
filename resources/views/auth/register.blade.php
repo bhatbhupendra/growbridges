@@ -25,29 +25,12 @@
                 class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                 required>
                 <option value="">Select Role</option>
-                <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
                 <option value="agent" {{ old('role') === 'agent' ? 'selected' : '' }}>Student Sending Agent</option>
                 <option value="student" {{ old('role') === 'student' ? 'selected' : '' }}>Individual Student</option>
                 <option value="school" {{ old('role') === 'school' ? 'selected' : '' }}>Japanese Language School
                 </option>
             </select>
             <x-input-error :messages="$errors->get('role')" class="mt-2" />
-        </div>
-
-        <!-- School Name (only for school role) -->
-        <div class="mt-4 hidden" id="school_name_wrapper">
-            <x-input-label for="school_name" :value="__('School Name')" />
-            <x-text-input id="school_name" class="block mt-1 w-full" type="text" name="school_name"
-                :value="old('school_name')" autocomplete="organization" />
-            <x-input-error :messages="$errors->get('school_name')" class="mt-2" />
-        </div>
-
-        <!-- Student Name (optional override for student role) -->
-        <div class="mt-4 hidden" id="student_name_wrapper">
-            <x-input-label for="student_name" :value="__('Student Full Name')" />
-            <x-text-input id="student_name" class="block mt-1 w-full" type="text" name="student_name"
-                :value="old('student_name')" autocomplete="name" />
-            <x-input-error :messages="$errors->get('student_name')" class="mt-2" />
         </div>
 
         <!-- Password -->
@@ -77,36 +60,4 @@
             </x-primary-button>
         </div>
     </form>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const roleSelect = document.getElementById('role');
-        const schoolWrapper = document.getElementById('school_name_wrapper');
-        const studentWrapper = document.getElementById('student_name_wrapper');
-        const schoolInput = document.getElementById('school_name');
-        const studentInput = document.getElementById('student_name');
-
-        function toggleRoleFields() {
-            const role = roleSelect.value;
-
-            schoolWrapper.classList.add('hidden');
-            studentWrapper.classList.add('hidden');
-
-            schoolInput.required = false;
-            studentInput.required = false;
-
-            if (role === 'school') {
-                schoolWrapper.classList.remove('hidden');
-                schoolInput.required = true;
-            }
-
-            if (role === 'student') {
-                studentWrapper.classList.remove('hidden');
-            }
-        }
-
-        roleSelect.addEventListener('change', toggleRoleFields);
-        toggleRoleFields();
-    });
-    </script>
 </x-guest-layout>

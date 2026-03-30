@@ -140,12 +140,13 @@
                     </td>
                     <td>
                         <a href="{{ route('manage-users.edit', $user->id) }}" class="btn btn-sm btn-edit">Edit</a>
-
-                        <form action="{{ route('manage-users.destroy', $user->id) }}" method="POST"
-                            style="display:inline;">
+                        <form action="{{ route('manage-users.destroy', $user->id) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
-                            <button class="btn btn-sm btn-delete">Delete</button>
+                            <button type="submit" class="btn btn-sm btn-delete"
+                                onclick="return confirm('Are you sure you want to delete this user?')">
+                                Delete
+                            </button>
                         </form>
                     </td>
                 </tr>

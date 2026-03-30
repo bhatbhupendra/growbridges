@@ -96,7 +96,6 @@ class PreSchoolController extends Controller
 
                     $submitted = StudentDocument::query()
                         ->where('student_id', $student->id)
-                        ->where('school_id', $currentSchool->id)
                         ->where('doc_type_id', $dt->id)
                         ->exists();
 
@@ -136,7 +135,6 @@ class PreSchoolController extends Controller
 
             $photoDocument = StudentDocument::query()
                 ->where('student_id', $student->id)
-                ->when($currentSchool, fn ($q) => $q->where('school_id', $currentSchool->id))
                 ->whereHas('documentType', function ($q) {
                     $q->whereIn('file_type', ['jpg', 'jpeg']);
                 })

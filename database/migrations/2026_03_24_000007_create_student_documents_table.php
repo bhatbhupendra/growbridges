@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('student_id')->constrained('students')->cascadeOnDelete();
-            $table->foreignId('school_id')->nullable()->constrained('schools')->cascadeOnDelete();
             $table->foreignId('doc_type_id')->constrained('document_types')->cascadeOnDelete();
 
             $table->string('file_name')->nullable();
@@ -30,12 +29,12 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['student_id', 'school_id']);
+            $table->index(['student_id']);
             $table->index('verify_status');
 
             // optional: only one current document per type per student per school
             // remove this if later you want multiple uploads/history per same doc type
-            $table->unique(['student_id', 'school_id', 'doc_type_id'], 'student_school_doc_unique');
+            $table->unique(['student_id', 'doc_type_id'], 'student_doc_unique');
         });
     }
 

@@ -126,7 +126,6 @@ class SchoolController extends Controller
 
         $submittedDocs = StudentDocument::query()
             ->whereIn('student_id', $studentIds)
-            ->where('school_id', $school->id)
             ->get(['student_id', 'doc_type_id'])
             ->groupBy('student_id')
             ->map(function ($docs) {

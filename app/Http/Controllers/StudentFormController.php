@@ -49,7 +49,7 @@ class StudentFormController extends Controller
         });
 
         return redirect()
-            ->route('agent.dashboard')
+            ->route('dashboard')
             ->with('success', 'Student added successfully.');
     }
 
@@ -73,7 +73,7 @@ class StudentFormController extends Controller
         $student->update($data);
 
         return redirect()
-            ->route('agent.dashboard')
+            ->route('dashboard')
             ->with('success', 'Student updated successfully.');
     }
 

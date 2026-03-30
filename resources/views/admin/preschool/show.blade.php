@@ -136,7 +136,10 @@ body {
                         <h5 class="m-0">School Dashboard</h5>
                         <div class="text-muted" style="font-size:12px;">Assigned students for {{ $school->name }}</div>
                     </div>
-                    <span class="badge badge-soft">School User</span>
+                    <div>
+                        <span class="badge badge-soft">Admin View</span> 
+                        <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm">← Dashboard</a>
+                    </div>
                 </div>
             </div>
 

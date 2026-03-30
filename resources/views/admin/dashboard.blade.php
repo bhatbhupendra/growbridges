@@ -101,6 +101,56 @@ body {
 
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="m-0" style="font-weight:800;">CURRENT SCHOOLS</h6>
+                    <a href="{{ route('admin.school-requirements.index') }}" class="btn btn-outline-primary btn-sm">
+                        Manage Requirements
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width:60px;">#</th>
+                                <th>School Name</th>
+                                <th style="width:320px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($schools as $index => $school)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $school->name }}</td>
+                                <td>
+                                    <a class="btn btn-sm btn-primary"
+                                        href="{{ route('admin.school-requirements.index', ['school_id' => $school->id]) }}">
+                                        Manage Requirements
+                                    </a>
+
+                                    @if($school->id != 1)
+                                    <a class="btn btn-sm btn-primary" href="{{ route('admin.school.show', $school) }}">
+                                        View School
+                                    </a>
+                                    @else
+                                    <a class="btn btn-sm btn-secondary disabled" href="#">
+                                        (USE QUICK ACTIONS)
+                                    </a>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="3" class="text-center">No schools found.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <div class="card-box">
+                <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="m-0" style="font-weight:800;">Self-Apply Students</h6>
                     <span class="badge badge-soft">Users (Role: Student)</span>
                 </div>
@@ -132,49 +182,6 @@ body {
                             @empty
                             <tr>
                                 <td colspan="5" class="text-center">No users found.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="card-box">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="m-0" style="font-weight:800;">CURRENT SCHOOLS</h6>
-                    <a href="{{ route('admin.school-requirements.index') }}" class="btn btn-outline-primary btn-sm">
-                        Manage Requirements
-                    </a>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped align-middle mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th style="width:60px;">#</th>
-                                <th>School Name</th>
-                                <th style="width:320px;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($schools as $index => $school)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>{{ $school->name }}</td>
-                                <td>
-                                    <a class="btn btn-sm btn-primary"
-                                        href="{{ route('admin.school-requirements.index', ['school_id' => $school->id]) }}">
-                                        Manage Requirements
-                                    </a>
-
-                                    <a class="btn btn-sm btn-primary" href="{{ route('admin.school.show', $school) }}">
-                                        View School
-                                    </a>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="3" class="text-center">No schools found.</td>
                             </tr>
                             @endforelse
                         </tbody>

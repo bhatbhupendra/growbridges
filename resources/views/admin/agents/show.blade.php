@@ -121,7 +121,10 @@ body {
                         <h5 class="m-0">Agent / Consultancy View</h5>
                         <div class="text-muted" style="font-size:12px;">Students + document completion overview</div>
                     </div>
-                    <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm">← Dashboard</a>
+                    <div>
+                        <a href="{{ route('admin.dashboard') }}" class="btn btn-secondary btn-sm">← Dashboard</a>
+                        <span class="badge badge-soft">Admin View</span>
+                    </div>
                 </div>
             </div>
 

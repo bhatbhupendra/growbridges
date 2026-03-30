@@ -38,17 +38,6 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'role' => ['required', 'in:admin,agent,student,school'],
-            'school_name' => [
-                'nullable',
-                'string',
-                'max:255',
-                function ($attribute, $value, $fail) use ($request) {
-                    if ($request->role === 'school' && trim((string) $value) === '') {
-                        $fail('The school name field is required when role is school.');
-                    }
-                },
-            ],
-            'student_name' => ['nullable', 'string', 'max:255'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -76,7 +65,7 @@ class RegisteredUserController extends Controller
                     $student=Student::create([
                         'user_id' => $user->id,
                         'created_by' => $user->id,
-                        'student_name' => trim($request->student_name ?: $request->name),
+                        'student_name' => trim($request->name ?: $request->name),
                         'email' => trim($request->email),
                     ]);
                 }
@@ -106,7 +95,7 @@ class RegisteredUserController extends Controller
 
             // school -> create or reuse school, then assign users.school_id
             if ($role === 'school') {
-                $schoolName = trim((string) $request->school_name);
+                $schoolName = trim((string) $request->name);
 
                 if ($schoolName === '') {
                     abort(422, 'School name is required for school role.');

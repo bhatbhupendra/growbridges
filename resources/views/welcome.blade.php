@@ -306,7 +306,7 @@
                 <div class="info-list">
                     <div class="info-item">
                         <div class="info-icon">📍</div>
-                        <div><strong>Japan Office</strong> Tokeyo, Japan / +81-80-1234-5678 /
+                        <div><strong>Japan Office</strong> Tokyo, Japan / +81-90-9132-7070 /
                             info@growbridges.com</div>
                     </div>
                 </div>
@@ -314,12 +314,11 @@
                 <div class="feature-box">
                     <div class="feature-card">
                         <h3>About Grow Bridges pvt. ltd.</h3>
-                        <p>GrowBridges Pvt. Ltd. is a Japan based support and placement company dedicated to
-                            international students.</p>
+                        <p>GrowBridges Pvt. Ltd. is a support portal that helps international students, supporting agencies, and Japanese schools to interact with each other and conduct their business smoothly.</p>
                     </div>
                     <div class="feature-card">
                         <h3>About the Web App</h3>
-                        <p>Handels and Manage Student Files.</p>
+                        <p>Handles and manages students' information and files for those who want to apply for a student visa in Japanese Language Schools.</p>
                     </div>
                 </div>
 

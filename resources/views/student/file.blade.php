@@ -155,6 +155,8 @@ body {
                         <div class="small-muted">School: <strong>{{ $school->name }}</strong></div>
                     </div>
                     <div class="d-flex gap-2">
+                        <a href="{{ url()->previous() }}" class="btn btn-secondary">Back</a>
+                        <a href="{{ route('dashboard') }}" class="btn btn-secondary btn-sm">Dashboard</a>
                         <a href="{{ route('student.edit', $student) }}" class="btn btn-sm btn-warning">Edit</a>
                         <a href="{{ route('student.zip', $student) }}" class="btn btn-sm btn-primary">
                             ZIP FILES

@@ -13,7 +13,6 @@ class StudentDocument extends Model
 
     protected $fillable = [
         'student_id',
-        'school_id',
         'doc_type_id',
         'file_name',
         'file_path',
@@ -33,11 +32,6 @@ class StudentDocument extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
-    }
-
-    public function school(): BelongsTo
-    {
-        return $this->belongsTo(School::class);
     }
 
     public function documentType(): BelongsTo

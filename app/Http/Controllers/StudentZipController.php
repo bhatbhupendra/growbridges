@@ -18,9 +18,8 @@ class StudentZipController extends Controller
 
         $this->authorizeDownload($user, $student);
 
-        $documents = StudentDocument::with(['documentType', 'school'])
+        $documents = StudentDocument::with(['documentType'])
             ->where('student_id', $student->id)
-            ->orderBy('school_id')
             ->orderBy('doc_type_id')
             ->get();
 
