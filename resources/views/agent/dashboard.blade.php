@@ -109,6 +109,54 @@ body {
     padding: .35rem .55rem;
     font-size: 12.5px;
 }
+
+.school-switch-dropdown {
+    min-width: 160px;
+    font-weight: 600;
+    border-radius: 8px;
+}
+
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 12px;
+    border: 1px solid transparent;
+    line-height: 1;
+}
+
+.chip-pending {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #9a3412;
+}
+
+.chip-accepted {
+    background: #ecfeff;
+    border-color: #a5f3fc;
+    color: #155e75;
+}
+
+.chip-rejected {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.chip-enrolled {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.school-switch-dropdown {
+    min-width: 160px;
+    font-weight: 600;
+    border-radius: 8px;
+}
 </style>
 
 <div class="container page-container small-ui">
@@ -200,7 +248,8 @@ body {
                                 </th>
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
-                                <th style="width:170px;">School</th>
+                                <th style="width:170px;">Assigned Schools</th>
+                                <th style="width:170px;">Status</th>
                                 <th style="width:360px;">Documents</th>
                                 <th style="width:180px;">Photo</th>
                                 <th style="width:190px;">Actions</th>
@@ -260,18 +309,37 @@ body {
                                         @if($schools->isEmpty())
                                             <span class="text-muted">—</span>
                                         @else
-                                            <div class="d-flex flex-wrap gap-1">
+                                            <select
+                                                class="form-select form-select-sm school-switch-dropdown"
+                                                data-student-id="{{ $student->id }}"
+                                            >
                                                 @foreach($schools as $schoolItem)
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-sm school-switch-btn {{ $activeSchool && $activeSchool['id'] == $schoolItem['id'] ? 'btn-primary' : 'btn-outline-primary' }}"
-                                                        data-student-id="{{ $student->id }}"
-                                                        data-school-id="{{ $schoolItem['id'] }}">
+                                                    <option
+                                                        value="{{ $schoolItem['id'] }}"
+                                                        {{ $activeSchool && $activeSchool['id'] == $schoolItem['id'] ? 'selected' : '' }}
+                                                    >
                                                         {{ $schoolItem['name'] }}
-                                                    </button>
+                                                    </option>
                                                 @endforeach
-                                            </div>
+                                            </select>
                                         @endif
+                                    </td>
+
+                                    <td>
+                                        @php
+                                            $activeStatus = strtolower($activeSchool['status'] ?? 'pending');
+
+                                            $statusClass = match($activeStatus) {
+                                                'selected', 'coe-granted' => 'chip-accepted',
+                                                'rejected', 'coe-rejected', 'visa-rejected', 'withdrawal' => 'chip-rejected',
+                                                'visa-granted' => 'chip-enrolled',
+                                                default => 'chip-pending',
+                                            };
+                                        @endphp
+
+                                        <span class="status-chip {{ $statusClass }}" id="status-{{ $student->id }}">
+                                            {{ ucfirst($activeStatus) }}
+                                        </span>
                                     </td>
 
                                     <td>
@@ -323,7 +391,7 @@ body {
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">No students found for this filter.</td>
+                                    <td colspan="8" class="text-center">No students found for this filter.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -437,10 +505,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 3500);
     }
 
-    document.querySelectorAll('.school-switch-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const studentId = this.dataset.studentId;
-            const schoolId = parseInt(this.dataset.schoolId, 10);
+    document.querySelectorAll('.school-switch-dropdown').forEach(dropdown => {
+        function updateStudentRow() {
+            const studentId = dropdown.dataset.studentId;
+            const schoolId = parseInt(dropdown.value, 10);
 
             const dataEl = document.getElementById(`student-school-data-${studentId}`);
             if (!dataEl) return;
@@ -448,14 +516,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const schools = JSON.parse(dataEl.textContent || '[]');
             const selected = schools.find(s => parseInt(s.id, 10) === schoolId);
             if (!selected) return;
-
-            document.querySelectorAll(`.school-switch-btn[data-student-id="${studentId}"]`).forEach(btn => {
-                btn.classList.remove('btn-primary');
-                btn.classList.add('btn-outline-primary');
-            });
-
-            this.classList.remove('btn-outline-primary');
-            this.classList.add('btn-primary');
 
             const docsEl = document.getElementById(`docs-${studentId}`);
             if (docsEl) {
@@ -470,6 +530,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
+            const statusEl = document.getElementById(`status-${studentId}`);
+            if (statusEl) {
+                const status = (selected.status || 'pending').toLowerCase();
+
+                statusEl.className = 'status-chip';
+
+                if (status === 'selected' || status === 'coe-granted') {
+                    statusEl.classList.add('chip-accepted');
+                } else if (
+                    status === 'rejected' ||
+                    status === 'coe-rejected' ||
+                    status === 'visa-rejected' ||
+                    status === 'withdrawal'
+                ) {
+                    statusEl.classList.add('chip-rejected');
+                } else if (status === 'visa-granted') {
+                    statusEl.classList.add('chip-enrolled');
+                } else {
+                    statusEl.classList.add('chip-pending');
+                }
+
+                statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+
             const viewBtn = document.getElementById(`view-btn-${studentId}`);
             if (viewBtn) {
                 viewBtn.href = selected.view_url || '#';
@@ -479,7 +563,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     viewBtn.classList.add('disabled');
                 }
             }
-        });
+        }
+
+        dropdown.addEventListener('change', updateStudentRow);
+        updateStudentRow();
     });
 });
 </script>

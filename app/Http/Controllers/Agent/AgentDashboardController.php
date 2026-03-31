@@ -112,6 +112,7 @@ class AgentDashboardController extends Controller
                 return [
                     'id' => $school->id,
                     'name' => $school->name,
+                    'status' => $app->status ?? 'pending',
                     'docs' => $docOutput->values()->all(),
                     'view_url' => route('student.file.show', [$student, $school]),
                 ];
