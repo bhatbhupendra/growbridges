@@ -227,8 +227,8 @@ class StudentFileController extends Controller
     {
         abort_unless(Auth::user()->role === 'admin', 403);
 
-        if ($document->student_id !== $student->id) {
-            abort(404);
+        if ((int) $document->student_id !== (int) $student->id) {
+            return back()->with('error', 'This document does not belong to the selected student.');
         }
 
         $data = $request->validate([
@@ -256,8 +256,8 @@ class StudentFileController extends Controller
 
         abort_unless(in_array($user->role, ['admin', 'agent','school','student'], true), 403);
 
-        if ($document->student_id !== $student->id) {
-            abort(404);
+        if ((int) $document->student_id !== (int) $student->id) {
+            return back()->with('error', 'This document does not belong to the selected student.');
         }
 
         $data = $request->validate([
