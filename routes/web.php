@@ -171,6 +171,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('preschool.assign-student-school');
     Route::delete('/admin/pre-school/{school}/applications/{application}/remove-school/{targetApplication}',[PreSchoolController::class, 'removeStudentFromSchool'])
         ->name('preschool.remove-student-school');
+    Route::post('/admin/pre-school/applications/{application}/status', [PreSchoolController::class, 'updateStatus'])
+        ->name('pre-school.applications.status');
 });
 
 // //admin student page

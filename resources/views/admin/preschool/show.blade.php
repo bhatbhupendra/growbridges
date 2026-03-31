@@ -124,6 +124,39 @@ body {
     border-color: #bbf7d0;
     color: #166534;
 }
+
+/* assigned schools */
+.assigned-school-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 6px 8px;
+}
+
+.assigned-school-left {
+    min-width: 0;
+    flex: 1;
+}
+
+.assigned-school-left .badge {
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+    text-align: left;
+    line-height: 1.25;
+}
+
+.assigned-school-action {
+    flex-shrink: 0;
+}
+
+.assigned-school-dropdown {
+    font-weight: 600;
+    border-radius: 8px;
+}
 </style>
 
 <div class="container page-container small-ui">
@@ -168,6 +201,18 @@ body {
                             <option value="{{ $intake }}" {{ $selectedIntake === $intake ? 'selected' : '' }}>
                                 {{ $intake }}
                             </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Nationality</label>
+                        <select name="nationality" class="form-select">
+                            <option value="all" {{ $selectedNationality === 'all' ? 'selected' : '' }}>All nationality</option>
+                            @foreach($nationalities as $nationality)
+                                <option value="{{ $nationality }}" {{ $selectedNationality === $nationality ? 'selected' : '' }}>
+                                    {{ $nationality }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -253,7 +298,6 @@ body {
 
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="thumb-mini">{{ $initial ?: 'S' }}</div>
                                         <div>
                                             <div class="student-name">{{ $name }}</div>
                                             @if($jp)
@@ -265,31 +309,25 @@ body {
 
                                 <td>
                                     @if(!empty($row['assigned_schools']) && count($row['assigned_schools']))
-                                        <div class="d-flex flex-column gap-1">
+                                        @php
+                                            $currentAssigned = collect($row['assigned_schools'])->firstWhere('is_current', true)
+                                                ?? collect($row['assigned_schools'])->first();
+                                        @endphp
+
+                                        <select class="form-select form-select-sm assigned-school-dropdown" data-row="{{ $index }}">
                                             @foreach($row['assigned_schools'] as $assignedSchool)
-                                                <div class="d-flex align-items-center justify-content-between gap-2 border rounded px-2 py-1">
-                                                    <div>
-                                                        <span class="badge badge-soft">{{ $assignedSchool['school_name'] }}</span>
-
-                                                        @if($assignedSchool['is_current'])
-                                                            <span class="badge bg-dark">Current</span>
-                                                        @endif
-                                                    </div>
-
-                                                    @unless($assignedSchool['is_current'])
-                                                        <form method="POST"
-                                                            action="{{ route('preschool.remove-student-school', [$school, $application, $assignedSchool['application_id']]) }}"
-                                                            onsubmit="return confirm('Remove this assigned school from the student?');">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                                Remove
-                                                            </button>
-                                                        </form>
-                                                    @endunless
-                                                </div>
+                                                <option
+                                                    value="{{ $assignedSchool['application_id'] }}"
+                                                    data-status="{{ strtolower($assignedSchool['status'] ?? 'pending') }}"
+                                                    data-is-current="{{ $assignedSchool['is_current'] ? '1' : '0' }}"
+                                                    data-remove-url="{{ route('preschool.remove-student-school', [$school, $application, $assignedSchool['application_id']]) }}"
+                                                    data-status-url="{{ route('pre-school.applications.status', $assignedSchool['application_id']) }}"
+                                                    {{ $currentAssigned && $currentAssigned['application_id'] == $assignedSchool['application_id'] ? 'selected' : '' }}
+                                                >
+                                                    {{ $assignedSchool['school_name'] }}{{ $assignedSchool['is_current'] ? ' (Current)' : '' }}
+                                                </option>
                                             @endforeach
-                                        </div>
+                                        </select>
                                     @else
                                         <span class="text-muted">No assigned schools</span>
                                     @endif
@@ -314,9 +352,74 @@ body {
                                 </td>
 
                                 <td>
-                                    <span class="status-chip {{ $statusClass }}">
-                                        {{ ucfirst($status) }}
+                                    @php
+                                        $currentAssigned = collect($row['assigned_schools'])->firstWhere('is_current', true)
+                                            ?? collect($row['assigned_schools'])->first();
+
+                                        $selectedStatus = strtolower($currentAssigned['status'] ?? 'pending');
+
+                                        $selectedStatusClass = match($selectedStatus) {
+                                            'selected' => 'chip-accepted',
+                                            'rejected' => 'chip-rejected',
+                                            'visa-granted' => 'chip-enrolled',
+                                            'coe-granted' => 'chip-accepted',
+                                            default => 'chip-pending',
+                                        };
+                                    @endphp
+
+                                    <span class="status-chip {{ $selectedStatusClass }}" id="status-chip-{{ $index }}">
+                                        {{ ucfirst($selectedStatus) }}
                                     </span>
+                                    <!-- update status start -->
+                                    @php
+                                        $currentAssigned = collect($row['assigned_schools'])->firstWhere('is_current', true)
+                                            ?? collect($row['assigned_schools'])->first();
+
+                                        $initialStatus = strtolower($currentAssigned['status'] ?? '');
+                                    @endphp
+
+                                    <form method="POST"
+                                        action="{{ $currentAssigned ? route('pre-school.applications.status', $currentAssigned['application_id']) : '#' }}"
+                                        id="status-form-{{ $index }}"
+                                        class="mt-1">
+                                        @csrf
+
+                                        <select name="status" class="form-select form-select-sm mb-1" id="status-select-{{ $index }}" required>
+                                            <option value="" disabled {{ empty($initialStatus) ? 'selected' : '' }}>
+                                                Select a Status
+                                            </option>
+                                            <option value="interview" {{ $initialStatus === 'interview' ? 'selected' : '' }}>
+                                                School want to interview
+                                            </option>
+                                            <option value="selected" {{ $initialStatus === 'selected' ? 'selected' : '' }}>
+                                                Selected
+                                            </option>
+                                            <option value="rejected" {{ $initialStatus === 'rejected' ? 'selected' : '' }}>
+                                                Rejected
+                                            </option>
+                                            <option value="coe-applied" {{ $initialStatus === 'coe-applied' ? 'selected' : '' }}>
+                                                COE Applied
+                                            </option>
+                                            <option value="coe-granted" {{ $initialStatus === 'coe-granted' ? 'selected' : '' }}>
+                                                COE Granted
+                                            </option>
+                                            <option value="coe-rejected" {{ $initialStatus === 'coe-rejected' ? 'selected' : '' }}>
+                                                COE Rejected
+                                            </option>
+                                            <option value="visa-granted" {{ $initialStatus === 'visa-granted' ? 'selected' : '' }}>
+                                                Visa Granted
+                                            </option>
+                                            <option value="visa-rejected" {{ $initialStatus === 'visa-rejected' ? 'selected' : '' }}>
+                                                Visa Rejected
+                                            </option>
+                                            <option value="withdrawal" {{ $initialStatus === 'withdrawal' ? 'selected' : '' }}>
+                                                Withdrawal
+                                            </option>
+                                        </select>
+
+                                        <button class="btn btn-sm btn-outline-dark w-100">Update Status</button>
+                                    </form>
+                                    <!-- update status end -->
                                 </td>
 
                                 <td>
@@ -336,6 +439,32 @@ body {
                                             data-schools='@json($row["available_schools"]->map(fn($s) => ["id" => $s->id, "name" => $s->name])->values())'>
                                             Assign School
                                         </button>
+                                        @php
+                                            $currentAssigned = collect($row['assigned_schools'])->firstWhere('is_current', true)
+                                                ?? collect($row['assigned_schools'])->first();
+
+                                            $initialRemoveUrl = $currentAssigned
+                                                ? route('preschool.remove-student-school', [$school, $application, $currentAssigned['application_id']])
+                                                : '';
+
+                                            $initialDisabled = !$currentAssigned || $currentAssigned['is_current'];
+                                        @endphp
+
+                                        <form method="POST"
+                                            id="remove-school-form-{{ $index }}"
+                                            action="{{ $initialRemoveUrl }}"
+                                            onsubmit="return confirm('Remove this assigned school from the student?');"
+                                            class="d-inline-block">
+                                            @csrf
+                                            @method('DELETE')
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    id="remove-school-btn-{{ $index }}"
+                                                    {{ $initialDisabled ? 'disabled' : '' }}>
+                                                Remove Selected School
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -484,6 +613,58 @@ document.addEventListener('DOMContentLoaded', function() {
 
             assignModal?.show();
         });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.assigned-school-dropdown').forEach(function (dropdown) {
+        function updateRowUI() {
+            const row = dropdown.dataset.row;
+            const selectedOption = dropdown.options[dropdown.selectedIndex];
+
+            const status = (selectedOption.getAttribute('data-status') || 'pending').toLowerCase();
+            const isCurrent = selectedOption.getAttribute('data-is-current') === '1';
+            const removeUrl = selectedOption.getAttribute('data-remove-url') || '';
+            const statusUrl = selectedOption.getAttribute('data-status-url') || '';
+
+            const statusChip = document.getElementById('status-chip-' + row);
+            const removeForm = document.getElementById('remove-school-form-' + row);
+            const removeBtn = document.getElementById('remove-school-btn-' + row);
+            const statusForm = document.getElementById('status-form-' + row);
+            const statusSelect = document.getElementById('status-select-' + row);
+
+            if (statusChip) {
+                statusChip.className = 'status-chip';
+
+                if (status === 'selected' || status === 'coe-granted') {
+                    statusChip.classList.add('chip-accepted');
+                } else if (status === 'rejected' || status === 'coe-rejected' || status === 'visa-rejected' || status === 'withdrawal') {
+                    statusChip.classList.add('chip-rejected');
+                } else if (status === 'visa-granted') {
+                    statusChip.classList.add('chip-enrolled');
+                } else {
+                    statusChip.classList.add('chip-pending');
+                }
+
+                statusChip.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+
+            if (removeForm && removeBtn) {
+                removeForm.action = removeUrl;
+                removeBtn.disabled = isCurrent;
+            }
+
+            if (statusForm) {
+                statusForm.action = statusUrl;
+            }
+
+            if (statusSelect) {
+                statusSelect.value = status;
+            }
+        }
+
+        dropdown.addEventListener('change', updateRowUI);
+        updateRowUI();
     });
 });
 </script>
