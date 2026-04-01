@@ -13,9 +13,23 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->get();
+        $users = User::query()
+            ->when($request->filled('role'), function ($query) use ($request) {
+                $query->where('role', $request->role);
+            })
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim($request->search);
+
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%');
+                });
+            })
+            ->latest()
+            ->get();
+
         return view('admin.manageUsers.index', compact('users'));
     }
 
@@ -110,85 +124,74 @@ class UserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'role' => ['required', 'in:admin,agent,student,school'],
             'password' => ['nullable', 'min:6'],
         ]);
 
         DB::transaction(function () use ($request, $user) {
-            $role = $request->role;
-
             $data = [
                 'name' => trim($request->name),
                 'email' => trim($request->email),
-                'role' => $role,
+                'role' => $user->role, // keep old role always
             ];
 
             if ($request->filled('password')) {
                 $data['password'] = Hash::make($request->password);
             }
 
-            if ($role !== 'school') {
-                $data['school_id'] = null;
-            }
-
             $user->update($data);
 
-            // admin & agent → nothing extra
-            if (in_array($role, ['admin', 'agent'], true)) {
-                return;
-            }
+            // keep related profile synced only, without changing role
+            if ($user->role === 'student') {
+                $student = Student::where('user_id', $user->id)->first();
 
-            // student → create/update student
-            if ($role === 'student') {
-                $student = Student::updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
+                if ($student) {
+                    $student->update([
                         'student_name' => $user->name,
                         'email' => $user->email,
-                    ]
-                );
-
-                $preSchool = School::find(1);
-
-                if ($preSchool) {
-                    StudentSchoolApplication::firstOrCreate(
-                        [
-                            'student_id' => $student->id,
-                            'school_id' => 1,
-                        ],
-                        [
-                            'status' => 'pending',
-                            'assigned_by' => auth()->id() ?? $user->id,
-                            'applied_by' => auth()->id() ?? $user->id,
-                            'applied_at' => now(),
-                        ]
-                    );
+                    ]);
                 }
-
-                return;
             }
 
-            // school → create/reuse school
-            if ($role === 'school') {
-                $school = School::firstOrCreate(
-                    ['name' => $user->name],
-                    ['name' => $user->name]
-                );
+            if ($user->role === 'school' && $user->school_id) {
+                $school = School::find($user->school_id);
 
-                $user->update([
-                    'school_id' => $school->id,
-                ]);
-
-                return;
+                if ($school) {
+                    $school->update([
+                        'name' => $user->name,
+                    ]);
+                }
             }
         });
 
-        return redirect()->route('manage-users.index')->with('success', 'User updated');
+        return redirect()->route('manage-users.index')->with('success', 'User updated successfully');
     }
 
     public function destroy(User $user)
     {
-        $user->delete();
-        return back()->with('success', 'User deleted');
+        DB::transaction(function () use ($user) {
+            // If user is a student, delete student profile + related applications
+            $student = Student::where('user_id', $user->id)->first();
+            if ($student) {
+                StudentSchoolApplication::where('student_id', $student->id)->delete();
+                $student->delete();
+            }
+
+            // If user is a school, delete school profile
+            if ($user->school_id) {
+                $school = School::find($user->school_id);
+
+                // detach school from user first
+                $user->update(['school_id' => null]);
+
+                if ($school) {
+                    $school->delete();
+                }
+            }
+
+            // finally delete user
+            $user->delete();
+        });
+
+        return back()->with('success', 'User deleted successfully');
     }
 }

@@ -24,8 +24,9 @@
     background: #161616;
     color: #fff;
     border-radius: 10px;
-    padding: 10px 16px;
-    font-weight: 600;
+    padding: 5px 8px;
+    font-size: 15px;
+    font-weight: 400;
     border: none;
 }
 
@@ -99,11 +100,52 @@
     border-radius: 10px;
     font-size: 14px;
 }
+
+/* NEW */
+.filter-box {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+.btn-filter {
+    background: #161616;
+    border: 1px solid #161616;
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.btn-reset {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    color: #111827;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.btn-reset:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
 </style>
 
 <div class="container page-container">
 
-    ```
     <div class="page-header">
         <div class="page-title">User Management</div>
         <a href="{{ route('manage-users.create') }}" class="btn btn-main">+ Add User</a>
@@ -115,11 +157,47 @@
     </div>
     @endif
 
+    {{-- NEW: search + filter --}}
+    <div class="filter-box">
+        <form method="GET" action="{{ route('manage-users.index') }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Search</label>
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        placeholder="Search by name or email"
+                        value="{{ request('search') }}"
+                    >
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Role</label>
+                    <select name="role" class="form-select">
+                        <option value="">All Roles</option>
+                        <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                        <option value="agent" {{ request('role') == 'agent' ? 'selected' : '' }}>Agent</option>
+                        <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>Student</option>
+                        <option value="school" {{ request('role') == 'school' ? 'selected' : '' }}>School</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="filter-actions">
+                        <button type="submit" class="btn-filter">Filter</button>
+                        <a href="{{ route('manage-users.index') }}" class="btn-reset">Reset</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <div class="card-box">
         <table class="table align-middle">
             <thead>
                 <tr>
-                    <th style="width:60px;">SN</th>
+                    <th>SN</th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Role</th>
@@ -128,7 +206,7 @@
             </thead>
 
             <tbody>
-                @foreach($users as $index => $user)
+                @forelse($users as $index => $user)
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $user->name }}</td>
@@ -150,11 +228,14 @@
                         </form>
                     </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">No users found.</td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
-    ```
 
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
