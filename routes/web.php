@@ -157,6 +157,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::delete('/admin/agents/{agent}', [AgentController::class, 'destroy'])
         ->name('admin.agents.destroy');
+    Route::post('/admin/agents/{agent}/students/{student}/assign-school', [AgentController::class, 'assignStudentToSchool'])
+    ->name('agent.assign-student-school');
+    Route::delete('/admin/agents/{agent}/students/{student}/remove-school/{targetApplication}', [AgentController::class, 'removeStudentFromSchool'])
+        ->name('agent.remove-student-school');
+    Route::post('/admin/agents/{agent}/applications/{application}/status', [AgentController::class, 'updateStatus'])
+        ->name('agent.applications.status');
 
 });
 
@@ -164,6 +170,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/school/{school}', [SchoolController::class, 'show'])
         ->name('admin.school.show');
+    Route::post('/admin/school/{school}/applications/{application}/assign-school', [SchoolController::class, 'assignStudentToSchool'])
+    ->name('school.assign-student-school');
+    Route::delete('/admin/school/{school}/applications/{application}/remove-school/{targetApplication}', [SchoolController::class, 'removeStudentFromSchool'])
+        ->name('school.remove-student-school');
+    Route::post('/admin/school/applications/{application}/status', [SchoolController::class, 'updateStatus'])
+    ->name('school.applications.status');
+    
     //admin preschool
     Route::get('/admin/pre-school/{school}', [PreSchoolController::class, 'show'])
         ->name('admin.preschool.show');

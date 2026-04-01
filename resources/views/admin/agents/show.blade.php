@@ -109,6 +109,47 @@ body {
     padding: .35rem .55rem;
     font-size: 12.5px;
 }
+
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 12px;
+    border: 1px solid transparent;
+    line-height: 1;
+}
+
+.chip-pending {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #9a3412;
+}
+
+.chip-accepted {
+    background: #ecfeff;
+    border-color: #a5f3fc;
+    color: #155e75;
+}
+
+.chip-rejected {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+.chip-enrolled {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+
+.assigned-school-dropdown {
+    font-weight: 600;
+    border-radius: 8px;
+}
 </style>
 
 <div class="container page-container small-ui">
@@ -150,7 +191,7 @@ body {
                 </div>
 
                 <form method="GET" class="filter-bar row g-2 align-items-end mb-2">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label mb-1" style="font-weight:800;">Intake</label>
                         <select name="intake" class="form-select">
                             <option value="all" {{ $selectedIntake === 'all' ? 'selected' : '' }}>All intake</option>
@@ -162,7 +203,19 @@ body {
                         </select>
                     </div>
 
-                    <div class="col-md-5">
+                    <div class="col-md-3">
+                        <label class="form-label mb-1" style="font-weight:800;">Nationality</label>
+                        <select name="nationality" class="form-select">
+                            <option value="all" {{ $selectedNationality === 'all' ? 'selected' : '' }}>All nationality</option>
+                            @foreach($nationalities as $nationality)
+                                <option value="{{ $nationality }}" {{ $selectedNationality === $nationality ? 'selected' : '' }}>
+                                    {{ $nationality }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
                         <label class="form-label mb-1" style="font-weight:800;">School</label>
                         <select name="school_id" class="form-select">
                             <option value="all" {{ $selectedSchool === 'all' ? 'selected' : '' }}>All schools</option>
@@ -175,6 +228,22 @@ body {
                         </select>
                     </div>
 
+                    <div class="col-md-3">
+                        <label class="form-label mb-1" style="font-weight:800;">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="all" {{ $selectedStatus === 'all' ? 'selected' : '' }}>All status</option>
+                            <option value="interview" {{ $selectedStatus === 'interview' ? 'selected' : '' }}>School want to interview</option>
+                            <option value="selected" {{ $selectedStatus === 'selected' ? 'selected' : '' }}>Selected</option>
+                            <option value="rejected" {{ $selectedStatus === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                            <option value="coe-applied" {{ $selectedStatus === 'coe-applied' ? 'selected' : '' }}>COE Applied</option>
+                            <option value="coe-granted" {{ $selectedStatus === 'coe-granted' ? 'selected' : '' }}>COE Granted</option>
+                            <option value="coe-rejected" {{ $selectedStatus === 'coe-rejected' ? 'selected' : '' }}>COE Rejected</option>
+                            <option value="visa-granted" {{ $selectedStatus === 'visa-granted' ? 'selected' : '' }}>Visa Granted</option>
+                            <option value="visa-rejected" {{ $selectedStatus === 'visa-rejected' ? 'selected' : '' }}>Visa Rejected</option>
+                            <option value="withdrawal" {{ $selectedStatus === 'withdrawal' ? 'selected' : '' }}>Withdrawal</option>
+                        </select>
+                    </div>
+
                     <div class="col-md-3 d-grid">
                         <button class="btn btn-sm btn-primary" type="submit">Apply Filter</button>
                     </div>
@@ -183,7 +252,9 @@ body {
                         <div class="text-muted" style="font-size:12px;">
                             Showing:
                             <b>{{ $selectedIntake === 'all' ? 'All intakes' : $selectedIntake }}</b> /
-                            <b>{{ $selectedSchool === 'all' ? 'All schools' : 'Selected school' }}</b>
+                            <b>{{ $selectedNationality === 'all' ? 'All nationalities' : $selectedNationality }}</b> /
+                            <b>{{ $selectedSchool === 'all' ? 'All schools' : 'Selected school' }}</b> /
+                            <b>{{ $selectedStatus === 'all' ? 'All status' : $selectedStatus }}</b>
                             <a class="ms-2" href="{{ route('admin.agents.show', $agent) }}">Reset</a>
                         </div>
                     </div>
@@ -198,10 +269,11 @@ body {
                                 </th>
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
-                                <th style="width:170px;">School</th>
+                                <th style="width:200px;">Assigned Schools</th>
                                 <th style="width:360px;">Documents</th>
                                 <th style="width:180px;">Photo</th>
-                                <th style="width:190px;">Actions</th>
+                                <th style="width:180px;">Status</th>
+                                <th style="width:220px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -217,6 +289,28 @@ body {
                                     $rawPhotoPath = preg_replace('#^/?storage/#', '', $rawPhotoPath);
                                     $rawPhotoPath = ltrim($rawPhotoPath, '/');
                                     $photoUrl = $rawPhotoPath !== '' ? asset('storage/' . $rawPhotoPath) : null;
+
+                                    $currentAssigned = collect($row['assigned_schools'])->firstWhere('is_current', true)
+                                        ?? collect($row['assigned_schools'])->first();
+
+                                    $selectedStatusValue = strtolower($currentAssigned['status'] ?? 'pending');
+
+                                    $selectedStatusClass = match($selectedStatusValue) {
+                                        'selected' => 'chip-accepted',
+                                        'coe-granted' => 'chip-accepted',
+                                        'rejected' => 'chip-rejected',
+                                        'coe-rejected' => 'chip-rejected',
+                                        'visa-rejected' => 'chip-rejected',
+                                        'withdrawal' => 'chip-rejected',
+                                        'visa-granted' => 'chip-enrolled',
+                                        default => 'chip-pending',
+                                    };
+
+                                    $initialRemoveUrl = $currentAssigned
+                                        ? route('agent.remove-student-school', [$agent, $student, $currentAssigned['application_id']])
+                                        : '';
+
+                                    $initialDisabled = !$currentAssigned || $currentAssigned['is_current'];
                                 @endphp
 
                                 <tr>
@@ -252,25 +346,30 @@ body {
                                     </td>
 
                                     <td>
-                                        @if($schools->isEmpty())
-                                            <span class="text-muted">—</span>
-                                        @else
-                                            <div class="d-flex flex-wrap gap-1">
-                                                @foreach($schools as $schoolItem)
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-sm school-switch-btn {{ $activeSchool && $activeSchool['id'] == $schoolItem['id'] ? 'btn-primary' : 'btn-outline-primary' }}"
-                                                        data-student-id="{{ $student->id }}"
-                                                        data-school-id="{{ $schoolItem['id'] }}">
-                                                        {{ $schoolItem['name'] }}
-                                                    </button>
+                                        @if(!empty($row['assigned_schools']) && count($row['assigned_schools']))
+                                            <select class="form-select form-select-sm assigned-school-dropdown" data-row="{{ $index }}">
+                                                @foreach($row['assigned_schools'] as $assignedSchool)
+                                                    <option
+                                                        value="{{ $assignedSchool['application_id'] }}"
+                                                        data-status="{{ strtolower($assignedSchool['status'] ?? 'pending') }}"
+                                                        data-is-current="{{ $assignedSchool['is_current'] ? '1' : '0' }}"
+                                                        data-remove-url="{{ route('agent.remove-student-school', [$agent, $student, $assignedSchool['application_id']]) }}"
+                                                        data-status-url="{{ route('agent.applications.status', [$agent, $assignedSchool['application_id']]) }}"
+                                                        data-view-url="{{ $schools->firstWhere('application_id', $assignedSchool['application_id'])['view_url'] ?? '#' }}"
+                                                        data-docs='@json($schools->firstWhere("application_id", $assignedSchool["application_id"])["docs"] ?? [])'
+                                                        {{ $currentAssigned && $currentAssigned['application_id'] == $assignedSchool['application_id'] ? 'selected' : '' }}
+                                                    >
+                                                        {{ $assignedSchool['school_name'] }}{{ $assignedSchool['is_current'] ? ' (Current)' : '' }}
+                                                    </option>
                                                 @endforeach
-                                            </div>
+                                            </select>
+                                        @else
+                                            <span class="text-muted">—</span>
                                         @endif
                                     </td>
 
                                     <td>
-                                        <div class="doc-list" id="docs-{{ $student->id }}">
+                                        <div class="doc-list" id="docs-{{ $index }}">
                                             @if($activeSchool && !empty($activeSchool['docs']))
                                                 @foreach($activeSchool['docs'] as $doc)
                                                     <div class="{{ $doc['submitted'] ? 'doc-ok' : 'doc-miss' }}">
@@ -283,7 +382,7 @@ body {
                                         </div>
                                     </td>
 
-                                    <td class="text-center" id="photo-{{ $student->id }}">
+                                    <td class="text-center">
                                         @if($photoUrl)
                                             <img src="{{ $photoUrl }}" class="thumb" alt="Student Photo">
                                         @else
@@ -292,8 +391,60 @@ body {
                                     </td>
 
                                     <td>
+                                        <span class="status-chip {{ $selectedStatusClass }}" id="status-chip-{{ $index }}">
+                                            {{ ucfirst($selectedStatusValue) }}
+                                        </span>
+
+                                        @php
+                                            $initialStatus = strtolower($currentAssigned['status'] ?? '');
+                                        @endphp
+
+                                        <form method="POST"
+                                            action="{{ $currentAssigned ? route('agent.applications.status', [$agent, $currentAssigned['application_id']]) : '#' }}"
+                                            id="status-form-{{ $index }}"
+                                            class="mt-1">
+                                            @csrf
+
+                                            <select name="status" class="form-select form-select-sm mb-1" id="status-select-{{ $index }}" required>
+                                                <option value="" disabled {{ empty($initialStatus) ? 'selected' : '' }}>
+                                                    Select a Status
+                                                </option>
+                                                <option value="interview" {{ $initialStatus === 'interview' ? 'selected' : '' }}>
+                                                    School want to interview
+                                                </option>
+                                                <option value="selected" {{ $initialStatus === 'selected' ? 'selected' : '' }}>
+                                                    Selected
+                                                </option>
+                                                <option value="rejected" {{ $initialStatus === 'rejected' ? 'selected' : '' }}>
+                                                    Rejected
+                                                </option>
+                                                <option value="coe-applied" {{ $initialStatus === 'coe-applied' ? 'selected' : '' }}>
+                                                    COE Applied
+                                                </option>
+                                                <option value="coe-granted" {{ $initialStatus === 'coe-granted' ? 'selected' : '' }}>
+                                                    COE Granted
+                                                </option>
+                                                <option value="coe-rejected" {{ $initialStatus === 'coe-rejected' ? 'selected' : '' }}>
+                                                    COE Rejected
+                                                </option>
+                                                <option value="visa-granted" {{ $initialStatus === 'visa-granted' ? 'selected' : '' }}>
+                                                    Visa Granted
+                                                </option>
+                                                <option value="visa-rejected" {{ $initialStatus === 'visa-rejected' ? 'selected' : '' }}>
+                                                    Visa Rejected
+                                                </option>
+                                                <option value="withdrawal" {{ $initialStatus === 'withdrawal' ? 'selected' : '' }}>
+                                                    Withdrawal
+                                                </option>
+                                            </select>
+
+                                            <button class="btn btn-sm btn-outline-dark w-100">Update Status</button>
+                                        </form>
+                                    </td>
+
+                                    <td>
                                         <a href="{{ $activeSchool['view_url'] ?? '#' }}"
-                                            id="view-btn-{{ $student->id }}"
+                                            id="view-btn-{{ $index }}"
                                             class="btn btn-sm btn-success w-100 mb-1 {{ $activeSchool ? '' : 'disabled' }}">
                                             View Student
                                         </a>
@@ -301,6 +452,31 @@ body {
                                         <a href="{{ route('student.zip', $student) }}" class="btn btn-sm btn-primary w-100 mb-1">
                                             ZIP FILES
                                         </a>
+
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-primary w-100 mb-1 open-assign-school-modal"
+                                            data-student-name="{{ $student->student_name }}"
+                                            data-assign-url="{{ route('agent.assign-student-school', [$agent, $student]) }}"
+                                            data-available-schools='@json($row["available_schools"]->map(fn($s) => ["id" => $s->id, "name" => $s->name])->values())'>
+                                            Assign School
+                                        </button>
+
+                                        <form method="POST"
+                                            id="remove-school-form-{{ $index }}"
+                                            action="{{ $initialRemoveUrl }}"
+                                            onsubmit="return confirm('Remove this assigned school from the student?');"
+                                            class="mb-1">
+                                            @csrf
+                                            @method('DELETE')
+                                            <input type="hidden" name="current_application_id" id="current-application-id-{{ $index }}" value="{{ $currentAssigned['application_id'] ?? '' }}">
+
+                                            <button type="submit"
+                                                class="btn btn-sm btn-outline-danger w-100"
+                                                id="remove-school-btn-{{ $index }}"
+                                                {{ $initialDisabled ? 'disabled' : '' }}>
+                                                Remove Selected School
+                                            </button>
+                                        </form>
 
                                         <form method="POST" action="{{ route('student.destroy', $student) }}">
                                             @csrf
@@ -310,15 +486,11 @@ body {
                                                 Delete Student
                                             </button>
                                         </form>
-
-                                        <script type="application/json" id="student-school-data-{{ $student->id }}">
-                                            @json($schools->values())
-                                        </script>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">No students found for this filter.</td>
+                                    <td colspan="8" class="text-center">No students found for this filter.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -332,7 +504,7 @@ body {
             <div class="card-box side-box">
                 <h6 class="mb-2" style="font-weight:800;">About this page</h6>
                 <div class="text-muted" style="font-size:12px; line-height:1.5;">
-                    Filter students by <b>Intake</b> first, then narrow by <b>School</b>.
+                    Filter students by intake, nationality, school, and status.
                 </div>
 
                 <hr class="my-3">
@@ -353,9 +525,47 @@ body {
 
                 <div class="mb-2" style="font-weight:800;">Tips</div>
                 <div class="p-2 rounded" style="background:#f8fafc; border:1px solid #e5e7eb;">
-                    Use <b>Reset</b> to quickly show all students again.
+                    Use Reset to quickly show all students again.
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade modal-mini" id="assignSchoolModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h6 class="modal-title" style="font-weight:800;">Assign Student to School</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" id="assignSchoolForm">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <div class="text-muted" style="font-size:12px;">Student</div>
+                        <div id="assignStudentName" style="font-weight:800;">Student Name</div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Available Schools</label>
+                        <select name="school_id" id="assignSchoolSelect" class="form-select" required>
+                            <option value="">Select school</option>
+                        </select>
+                    </div>
+
+                    <div id="assignNoSchoolsMsg" class="alert alert-warning py-2 mb-0 d-none">
+                        No more schools available for this student.
+                    </div>
+                </div>
+
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-dark" id="assignSchoolSubmitBtn">Assign School</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -468,30 +678,108 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 3500);
     }
 
-    document.querySelectorAll('.school-switch-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const studentId = this.dataset.studentId;
-            const schoolId = parseInt(this.dataset.schoolId, 10);
+    const assignSchoolModalEl = document.getElementById('assignSchoolModal');
+    const assignSchoolForm = document.getElementById('assignSchoolForm');
+    const assignStudentName = document.getElementById('assignStudentName');
+    const assignSchoolSelect = document.getElementById('assignSchoolSelect');
+    const assignNoSchoolsMsg = document.getElementById('assignNoSchoolsMsg');
+    const assignSchoolSubmitBtn = document.getElementById('assignSchoolSubmitBtn');
 
-            const dataEl = document.getElementById(`student-school-data-${studentId}`);
-            if (!dataEl) return;
+    if (assignSchoolModalEl) {
+        const assignSchoolModal = new bootstrap.Modal(assignSchoolModalEl);
 
-            const schools = JSON.parse(dataEl.textContent || '[]');
-            const selected = schools.find(s => parseInt(s.id, 10) === schoolId);
-            if (!selected) return;
+        document.querySelectorAll('.open-assign-school-modal').forEach(button => {
+            button.addEventListener('click', function () {
+                const studentName = this.getAttribute('data-student-name') || 'Student';
+                const assignUrl = this.getAttribute('data-assign-url') || '';
+                const availableSchools = JSON.parse(this.getAttribute('data-available-schools') || '[]');
 
-            document.querySelectorAll(`.school-switch-btn[data-student-id="${studentId}"]`).forEach(btn => {
-                btn.classList.remove('btn-primary');
-                btn.classList.add('btn-outline-primary');
+                assignStudentName.textContent = studentName;
+                assignSchoolForm.setAttribute('action', assignUrl);
+
+                assignSchoolSelect.innerHTML = '<option value="">Select school</option>';
+
+                if (availableSchools.length > 0) {
+                    availableSchools.forEach(function (school) {
+                        const option = document.createElement('option');
+                        option.value = school.id;
+                        option.textContent = school.name;
+                        assignSchoolSelect.appendChild(option);
+                    });
+
+                    assignNoSchoolsMsg.classList.add('d-none');
+                    assignSchoolSelect.disabled = false;
+                    assignSchoolSubmitBtn.disabled = false;
+                } else {
+                    assignNoSchoolsMsg.classList.remove('d-none');
+                    assignSchoolSelect.disabled = true;
+                    assignSchoolSubmitBtn.disabled = true;
+                }
+
+                assignSchoolModal.show();
             });
+        });
+    }
 
-            this.classList.remove('btn-outline-primary');
-            this.classList.add('btn-primary');
+    document.querySelectorAll('.assigned-school-dropdown').forEach(function (dropdown) {
+        function updateRowUI() {
+            const row = dropdown.dataset.row;
+            const selectedOption = dropdown.options[dropdown.selectedIndex];
 
-            const docsEl = document.getElementById(`docs-${studentId}`);
+            const status = (selectedOption.getAttribute('data-status') || 'pending').toLowerCase();
+            const isCurrent = selectedOption.getAttribute('data-is-current') === '1';
+            const removeUrl = selectedOption.getAttribute('data-remove-url') || '';
+            const statusUrl = selectedOption.getAttribute('data-status-url') || '';
+            const viewUrl = selectedOption.getAttribute('data-view-url') || '#';
+            let docs = [];
+
+            try {
+                docs = JSON.parse(selectedOption.getAttribute('data-docs') || '[]');
+            } catch (e) {
+                docs = [];
+            }
+
+            const statusChip = document.getElementById('status-chip-' + row);
+            const removeForm = document.getElementById('remove-school-form-' + row);
+            const removeBtn = document.getElementById('remove-school-btn-' + row);
+            const statusForm = document.getElementById('status-form-' + row);
+            const statusSelect = document.getElementById('status-select-' + row);
+            const docsEl = document.getElementById('docs-' + row);
+            const viewBtn = document.getElementById('view-btn-' + row);
+            const currentApplicationIdInput = document.getElementById('current-application-id-' + row);
+
+            if (statusChip) {
+                statusChip.className = 'status-chip';
+
+                if (status === 'selected' || status === 'coe-granted') {
+                    statusChip.classList.add('chip-accepted');
+                } else if (status === 'rejected' || status === 'coe-rejected' || status === 'visa-rejected' || status === 'withdrawal') {
+                    statusChip.classList.add('chip-rejected');
+                } else if (status === 'visa-granted') {
+                    statusChip.classList.add('chip-enrolled');
+                } else {
+                    statusChip.classList.add('chip-pending');
+                }
+
+                statusChip.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+
+            if (removeForm && removeBtn) {
+                removeForm.action = removeUrl;
+                removeBtn.disabled = isCurrent;
+            }
+
+            if (statusForm) {
+                statusForm.action = statusUrl;
+            }
+
+            if (statusSelect) {
+                statusSelect.value = status;
+            }
+
             if (docsEl) {
-                if (selected.docs && selected.docs.length) {
-                    docsEl.innerHTML = selected.docs.map(doc => {
+                if (docs.length) {
+                    docsEl.innerHTML = docs.map(doc => {
                         const cls = doc.submitted ? 'doc-ok' : 'doc-miss';
                         const icon = doc.submitted ? '✔' : '✖';
                         return `<div class="${cls}">${icon} ${doc.name}</div>`;
@@ -501,16 +789,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            const viewBtn = document.getElementById(`view-btn-${studentId}`);
             if (viewBtn) {
-                viewBtn.href = selected.view_url || '#';
-                if (selected.view_url) {
+                viewBtn.href = viewUrl || '#';
+                if (viewUrl && viewUrl !== '#') {
                     viewBtn.classList.remove('disabled');
                 } else {
                     viewBtn.classList.add('disabled');
                 }
             }
-        });
+
+            if (currentApplicationIdInput) {
+                currentApplicationIdInput.value = selectedOption.value || '';
+            }
+        }
+
+        dropdown.addEventListener('change', updateRowUI);
+        updateRowUI();
     });
 });
 </script>

@@ -64,7 +64,6 @@ body {
 
 .thumb {
     width: 120px;
-    height: 120px;
     object-fit: cover;
     border-radius: 10px;
     border: 1px solid #ddd;
@@ -141,27 +140,13 @@ body {
     color: #166534;
 }
 
-.application-box {
-    border: 1px solid #e5e7eb;
+.assigned-school-dropdown {
+    font-weight: 600;
     border-radius: 8px;
-    padding: 6px 8px;
-    background: #fafafa;
 }
 
-.application-box.current-school {
-    border-color: #c7d2fe;
-    background: #eef2ff;
-}
-
-.application-school-name {
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.application-label {
-    font-size: 11px;
-    color: #6b7280;
-    font-weight: 700;
+.status-wrap {
+    min-width: 170px;
 }
 </style>
 
@@ -276,9 +261,11 @@ body {
                                 </th>
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
-                                <th style="width:260px;">Documents</th>
+                                <th style="width:220px;">Assigned Schools</th>
+                                <th style="width:140px;">Agent</th>
+                                <th style="width:260px;">Info</th>
                                 <th style="width:130px;">Photo</th>
-                                <th style="width:150px;">Applications</th>
+                                <th style="width:170px;">Status</th>
                                 <th style="width:220px;">Action</th>
                             </tr>
                         </thead>
@@ -288,20 +275,8 @@ body {
                                     $application = $row['application'];
                                     $student = $row['student'];
 
-                                    $status = strtolower($application->status ?? '');
-
-                                    $chipClass = match($status) {
-                                        'interview' => 'chip-pending',
-                                        'selected' => 'chip-accepted',
-                                        'rejected' => 'chip-rejected',
-                                        'coe-applied' => 'chip-pending',
-                                        'coe-granted' => 'chip-accepted',
-                                        'coe-rejected' => 'chip-rejected',
-                                        'visa-granted' => 'chip-enrolled',
-                                        'visa-rejected' => 'chip-rejected',
-                                        'withdrawal' => 'chip-rejected',
-                                        default => 'chip-pending',
-                                    };
+                                    $initial = strtoupper(mb_substr((string) ($student->student_name ?? 'S'), 0, 1));
+                                    $agentName = $student->creator->name ?? '-';
 
                                     $rawPath = trim((string) ($student->photo ?? ''));
                                     $rawPath = str_replace('\\', '/', $rawPath);
@@ -309,7 +284,27 @@ body {
                                     $rawPath = ltrim($rawPath, '/');
                                     $fileUrl = $rawPath !== '' ? asset('storage/' . $rawPath) : null;
 
-                                    $initial = strtoupper(mb_substr((string) ($student->student_name ?? 'S'), 0, 1));
+                                    $currentAssigned = collect($row['assigned_schools'])->firstWhere('is_current', true)
+                                        ?? collect($row['assigned_schools'])->first();
+
+                                    $selectedStatusValue = strtolower($currentAssigned['status'] ?? 'pending');
+
+                                    $selectedStatusClass = match($selectedStatusValue) {
+                                        'selected' => 'chip-accepted',
+                                        'coe-granted' => 'chip-accepted',
+                                        'rejected' => 'chip-rejected',
+                                        'coe-rejected' => 'chip-rejected',
+                                        'visa-rejected' => 'chip-rejected',
+                                        'withdrawal' => 'chip-rejected',
+                                        'visa-granted' => 'chip-enrolled',
+                                        default => 'chip-pending',
+                                    };
+
+                                    $initialRemoveUrl = $currentAssigned
+                                        ? route('school.remove-student-school', [$school, $application, $currentAssigned['application_id']])
+                                        : '';
+
+                                    $initialDisabled = !$currentAssigned || $currentAssigned['is_current'];
                                 @endphp
 
                                 <tr>
@@ -335,44 +330,38 @@ body {
                                                         <span class="text-primary">({{ $student->student_name_jp }})</span>
                                                     @endif
                                                 </div>
-
-                                                <div class="student-meta mt-1">
-                                                    @if(!empty($student->gender))
-                                                        <span class="badge badge-soft me-1">Gender: {{ $student->gender }}</span>
-                                                    @endif
-
-                                                    @if(!empty($student->nationality))
-                                                        <span class="badge badge-soft me-1">Nationality: {{ $student->nationality }}</span>
-                                                    @endif
-
-                                                    @if(!empty($student->age))
-                                                        <span class="badge badge-soft me-1">Age: {{ $student->age }}</span>
-                                                    @endif
-
-                                                    @if(!empty($student->intake))
-                                                        <span class="badge badge-soft me-1">Intake: {{ $student->intake }}</span>
-                                                    @endif
-
-                                                    @if($student->creator)
-                                                        <span class="badge badge-soft me-1">Agent: {{ $student->creator->name }}</span>
-                                                    @endif
-                                                </div>
                                             </div>
                                         </div>
                                     </td>
 
                                     <td>
-                                        <div class="doc-list">
-                                            @if($row['docs']->isEmpty())
-                                                <span class="text-muted">No required documents set.</span>
-                                            @else
-                                                @foreach($row['docs'] as $doc)
-                                                    <div class="{{ $doc['submitted'] ? 'doc-ok' : 'doc-miss' }}">
-                                                        {{ $doc['submitted'] ? '✔' : '✖' }} {{ $doc['name'] }}
-                                                    </div>
+                                        @if(!empty($row['assigned_schools']) && count($row['assigned_schools']))
+                                            <select class="form-select form-select-sm assigned-school-dropdown" data-row="{{ $index }}">
+                                                @foreach($row['assigned_schools'] as $assignedSchool)
+                                                    <option
+                                                        value="{{ $assignedSchool['application_id'] }}"
+                                                        data-status="{{ strtolower($assignedSchool['status'] ?? 'pending') }}"
+                                                        data-is-current="{{ $assignedSchool['is_current'] ? '1' : '0' }}"
+                                                        data-remove-url="{{ route('school.remove-student-school', [$school, $application, $assignedSchool['application_id']]) }}"
+                                                        data-status-url="{{ route('school.applications.status', $assignedSchool['application_id']) }}"
+                                                        {{ $currentAssigned && $currentAssigned['application_id'] == $assignedSchool['application_id'] ? 'selected' : '' }}
+                                                    >
+                                                        {{ $assignedSchool['school_name'] }}{{ $assignedSchool['is_current'] ? ' (Current)' : '' }}
+                                                    </option>
                                                 @endforeach
-                                            @endif
-                                        </div>
+                                            </select>
+                                        @else
+                                            <span class="text-muted">No assigned schools</span>
+                                        @endif
+                                    </td>
+
+                                    <td>{{ $agentName }}</td>
+
+                                    <td class="text-muted" style="font-size:12px;">
+                                        {{ !empty($student->gender) ? $student->gender . ' • ' : '' }}
+                                        {{ !empty($student->nationality) ? $student->nationality . ' • ' : '' }}
+                                        {{ !empty($student->age) ? 'Age: ' . $student->age . ' • ' : '' }}
+                                        {{ !empty($student->intake) ? 'Intake: ' . $student->intake : '' }}
                                     </td>
 
                                     <td>
@@ -383,83 +372,99 @@ body {
                                         @endif
                                     </td>
 
-                                    <td>       
-                                        <div class="mt-2">
-                                            <div class="fw-bold mb-1" style="font-size:12px;">All Applications</div>
-                                            @if($student->applications->isEmpty())
-                                                <div class="text-muted" style="font-size:12px;">No applications assigned.</div>
-                                            @else
-                                                <div class="d-flex flex-column gap-1">
-                                                    @foreach($student->applications->sortByDesc(fn($a) => (int) $a->school_id === (int) $school->id) as $studentApplication)
-                                                        @php
-                                                            $appStatus = strtolower($studentApplication->status ?? '');
-                                                            $appChipClass = match($appStatus) {
-                                                                'interview' => 'chip-pending',
-                                                                'selected' => 'chip-accepted',
-                                                                'rejected' => 'chip-rejected',
-                                                                'coe-applied' => 'chip-pending',
-                                                                'coe-granted' => 'chip-accepted',
-                                                                'coe-rejected' => 'chip-rejected',
-                                                                'visa-granted' => 'chip-enrolled',
-                                                                'visa-rejected' => 'chip-rejected',
-                                                                'withdrawal' => 'chip-rejected',
-                                                                default => 'chip-pending',
-                                                            };
-                                                            $isCurrentSchool = (int) $studentApplication->school_id === (int) $school->id;
-                                                        @endphp
-                                                        <div class="application-box {{ $isCurrentSchool ? 'current-school' : '' }}">
-                                                            <div class="d-flex justify-content-between align-items-center gap-2">
-                                                                <div>
-                                                                    <div class="application-school-name">
-                                                                        {{ $studentApplication->school?->name ?? 'Unknown School' }}
-                                                                    </div>
-                                                                    @if($isCurrentSchool)
-                                                                        <div class="application-label">Current school page</div>
-                                                                    @endif
-                                                                </div>
-                                                                <span class="status-chip {{ $appChipClass }}">
-                                                                    {{ strtoupper($studentApplication->status ?? 'pending') }}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
+                                    <td class="status-wrap">
+                                        <span class="status-chip {{ $selectedStatusClass }}" id="status-chip-{{ $index }}">
+                                            {{ ucfirst($selectedStatusValue) }}
+                                        </span>
+
+                                        @php
+                                            $initialStatus = strtolower($currentAssigned['status'] ?? '');
+                                        @endphp
+
+                                        <form method="POST"
+                                            action="{{ $currentAssigned ? route('school.applications.status', $currentAssigned['application_id']) : '#' }}"
+                                            id="status-form-{{ $index }}"
+                                            class="mt-1">
+                                            @csrf
+
+                                            <select name="status" class="form-select form-select-sm mb-1" id="status-select-{{ $index }}" required>
+                                                <option value="" disabled {{ empty($initialStatus) ? 'selected' : '' }}>
+                                                    Select a Status
+                                                </option>
+                                                <option value="interview" {{ $initialStatus === 'interview' ? 'selected' : '' }}>
+                                                    School want to interview
+                                                </option>
+                                                <option value="selected" {{ $initialStatus === 'selected' ? 'selected' : '' }}>
+                                                    Selected
+                                                </option>
+                                                <option value="rejected" {{ $initialStatus === 'rejected' ? 'selected' : '' }}>
+                                                    Rejected
+                                                </option>
+                                                <option value="coe-applied" {{ $initialStatus === 'coe-applied' ? 'selected' : '' }}>
+                                                    COE Applied
+                                                </option>
+                                                <option value="coe-granted" {{ $initialStatus === 'coe-granted' ? 'selected' : '' }}>
+                                                    COE Granted
+                                                </option>
+                                                <option value="coe-rejected" {{ $initialStatus === 'coe-rejected' ? 'selected' : '' }}>
+                                                    COE Rejected
+                                                </option>
+                                                <option value="visa-granted" {{ $initialStatus === 'visa-granted' ? 'selected' : '' }}>
+                                                    Visa Granted
+                                                </option>
+                                                <option value="visa-rejected" {{ $initialStatus === 'visa-rejected' ? 'selected' : '' }}>
+                                                    Visa Rejected
+                                                </option>
+                                                <option value="withdrawal" {{ $initialStatus === 'withdrawal' ? 'selected' : '' }}>
+                                                    Withdrawal
+                                                </option>
+                                            </select>
+
+                                            <button class="btn btn-sm btn-outline-dark w-100">Update Status</button>
+                                        </form>
                                     </td>
 
                                     <td>
-                                        <a href="{{ route('student.file.show', [$student, $school]) }}"
-                                            class="btn btn-sm btn-primary w-100 mb-1">
-                                            Open File
-                                        </a>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            <a href="{{ route('student.file.show', [$student, $school]) }}"
+                                                class="btn btn-sm btn-primary">
+                                                Open File
+                                            </a>
 
-                                        <a class="btn btn-sm btn-outline-dark w-100 mb-1"
-                                            href="{{ route('student.zip', $student) }}">
-                                            ZIP Files
-                                        </a>
+                                            <a class="btn btn-sm btn-outline-dark"
+                                                href="{{ route('student.zip', $student) }}">
+                                                ZIP Files
+                                            </a>
 
-                                        @if(($row['available_schools']->count() ?? 0) > 0)
-                                            <button
-                                                type="button"
-                                                class="btn btn-sm btn-success w-100 open-assign-school-modal"
-                                                data-student-id="{{ $student->id }}"
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-primary open-assign-school-modal"
                                                 data-student-name="{{ $student->student_name }}"
-                                                data-assign-url="{{ route('admin.students.assign-school', $student) }}"
-                                                data-available-schools='@json($row["available_schools"]->map(fn($s) => ["id" => $s->id, "name" => $s->name])->values())'
-                                            >
+                                                data-assign-url="{{ route('school.assign-student-school', [$school, $application]) }}"
+                                                data-available-schools='@json($row["available_schools"]->map(fn($s) => ["id" => $s->id, "name" => $s->name])->values())'>
                                                 Assign School
                                             </button>
-                                        @else
-                                            <button type="button" class="btn btn-sm btn-secondary w-100" disabled>
-                                                No More Schools
-                                            </button>
-                                        @endif
+
+                                            <form method="POST"
+                                                id="remove-school-form-{{ $index }}"
+                                                action="{{ $initialRemoveUrl }}"
+                                                onsubmit="return confirm('Remove this assigned school from the student?');"
+                                                class="d-inline-block">
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        id="remove-school-btn-{{ $index }}"
+                                                        {{ $initialDisabled ? 'disabled' : '' }}>
+                                                    Remove Selected School
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">No students enrolled yet.</td>
+                                    <td colspan="9" class="text-center">No students enrolled yet.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -594,6 +599,56 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    document.querySelectorAll('.assigned-school-dropdown').forEach(function (dropdown) {
+        function updateRowUI() {
+            const row = dropdown.dataset.row;
+            const selectedOption = dropdown.options[dropdown.selectedIndex];
+
+            const status = (selectedOption.getAttribute('data-status') || 'pending').toLowerCase();
+            const isCurrent = selectedOption.getAttribute('data-is-current') === '1';
+            const removeUrl = selectedOption.getAttribute('data-remove-url') || '';
+            const statusUrl = selectedOption.getAttribute('data-status-url') || '';
+
+            const statusChip = document.getElementById('status-chip-' + row);
+            const removeForm = document.getElementById('remove-school-form-' + row);
+            const removeBtn = document.getElementById('remove-school-btn-' + row);
+            const statusForm = document.getElementById('status-form-' + row);
+            const statusSelect = document.getElementById('status-select-' + row);
+
+            if (statusChip) {
+                statusChip.className = 'status-chip';
+
+                if (status === 'selected' || status === 'coe-granted') {
+                    statusChip.classList.add('chip-accepted');
+                } else if (status === 'rejected' || status === 'coe-rejected' || status === 'visa-rejected' || status === 'withdrawal') {
+                    statusChip.classList.add('chip-rejected');
+                } else if (status === 'visa-granted') {
+                    statusChip.classList.add('chip-enrolled');
+                } else {
+                    statusChip.classList.add('chip-pending');
+                }
+
+                statusChip.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            }
+
+            if (removeForm && removeBtn) {
+                removeForm.action = removeUrl;
+                removeBtn.disabled = isCurrent;
+            }
+
+            if (statusForm) {
+                statusForm.action = statusUrl;
+            }
+
+            if (statusSelect) {
+                statusSelect.value = status;
+            }
+        }
+
+        dropdown.addEventListener('change', updateRowUI);
+        updateRowUI();
+    });
 });
 </script>
 @endsection
