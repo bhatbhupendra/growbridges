@@ -262,7 +262,6 @@ body {
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
                                 <th style="width:220px;">Assigned Schools</th>
-                                <th style="width:140px;">Agent</th>
                                 <th style="width:260px;">Info</th>
                                 <th style="width:130px;">Photo</th>
                                 <th style="width:170px;">Status</th>
@@ -274,9 +273,6 @@ body {
                                 @php
                                     $application = $row['application'];
                                     $student = $row['student'];
-
-                                    $initial = strtoupper(mb_substr((string) ($student->student_name ?? 'S'), 0, 1));
-                                    $agentName = $student->creator->name ?? '-';
 
                                     $rawPath = trim((string) ($student->photo ?? ''));
                                     $rawPath = str_replace('\\', '/', $rawPath);
@@ -321,8 +317,6 @@ body {
 
                                     <td>
                                         <div class="d-flex align-items-start gap-2">
-                                            <div class="thumb-mini">{{ $initial }}</div>
-
                                             <div class="w-100">
                                                 <div class="student-name">
                                                     {{ $student->student_name }}
@@ -355,9 +349,8 @@ body {
                                         @endif
                                     </td>
 
-                                    <td>{{ $agentName }}</td>
-
                                     <td class="text-muted" style="font-size:12px;">
+                                        {{ !empty($student->creator->name) ? 'Agent :-'.$student->creator->name. ' • ' : '' }}
                                         {{ !empty($student->gender) ? $student->gender . ' • ' : '' }}
                                         {{ !empty($student->nationality) ? $student->nationality . ' • ' : '' }}
                                         {{ !empty($student->age) ? 'Age: ' . $student->age . ' • ' : '' }}
@@ -427,17 +420,17 @@ body {
                                     <td>
                                         <div class="d-flex flex-wrap gap-1">
                                             <a href="{{ route('student.file.show', [$student, $school]) }}"
-                                                class="btn btn-sm btn-primary">
-                                                Open File
+                                                class="btn btn-sm btn-success w-100 mb-1">
+                                                View Student
                                             </a>
 
-                                            <a class="btn btn-sm btn-outline-dark"
+                                            <a class="btn btn-sm btn-primary w-100 mb-1"
                                                 href="{{ route('student.zip', $student) }}">
                                                 ZIP Files
                                             </a>
 
                                             <button type="button"
-                                                class="btn btn-sm btn-outline-primary open-assign-school-modal"
+                                                class="btn btn-sm btn-outline-primary w-100 mb-1 open-assign-school-modal"
                                                 data-student-name="{{ $student->student_name }}"
                                                 data-assign-url="{{ route('school.assign-student-school', [$school, $application]) }}"
                                                 data-available-schools='@json($row["available_schools"]->map(fn($s) => ["id" => $s->id, "name" => $s->name])->values())'>
@@ -448,12 +441,12 @@ body {
                                                 id="remove-school-form-{{ $index }}"
                                                 action="{{ $initialRemoveUrl }}"
                                                 onsubmit="return confirm('Remove this assigned school from the student?');"
-                                                class="d-inline-block">
+                                                class="mb-1">
                                                 @csrf
                                                 @method('DELETE')
 
                                                 <button type="submit"
-                                                        class="btn btn-sm btn-outline-danger"
+                                                        class="btn btn-sm btn-outline-danger w-100"
                                                         id="remove-school-btn-{{ $index }}"
                                                         {{ $initialDisabled ? 'disabled' : '' }}>
                                                     Remove Selected School

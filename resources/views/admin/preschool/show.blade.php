@@ -257,7 +257,6 @@ body {
                                 <th style="width:55px;">#</th>
                                 <th>Student</th>
                                 <th style="width:220px;">Assigned Schools</th>
-                                <th style="width:140px;">Agent</th>
                                 <th style="width:260px;">Info</th>
                                 <th style="width:130px;">Photo</th>
                                 <th style="width:150px;">Status</th>
@@ -333,9 +332,8 @@ body {
                                     @endif
                                 </td>
 
-                                <td>{{ $agent }}</td>
-
                                 <td class="text-muted" style="font-size:12px;">
+                                    {{ !empty($agent) ? 'Agent :-'.$agent. ' • ' : '' }}
                                     {{ $gender ? $gender . ' • ' : '' }}
                                     {{ $nat ? $nat . ' • ' : '' }}
                                     {{ $age ? 'Age: ' . $age . ' • ' : '' }}
@@ -424,16 +422,16 @@ body {
 
                                 <td>
                                     <div class="d-flex flex-wrap gap-1">
-                                        <a class="btn btn-sm btn-success"
+                                        <a class="btn btn-sm btn-success w-100 mb-1"
                                             href="{{ route('student.file.show', [$st, $school]) }}">
-                                            View
+                                            View Student
                                         </a>
 
-                                        <a class="btn btn-sm btn-primary" href="{{ route('student.zip', $st) }}">
+                                        <a class="btn btn-sm btn-primary w-100 mb-1" href="{{ route('student.zip', $st) }}">
                                             ZIP Files
                                         </a>
 
-                                        <button type="button" class="btn btn-sm btn-outline-primary btnAssignSchool"
+                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 mb-1 btnAssignSchool"
                                             data-student-name="{{ $st->student_name }}"
                                             data-route="{{ route('preschool.assign-student-school', [$school, $application]) }}"
                                             data-schools='@json($row["available_schools"]->map(fn($s) => ["id" => $s->id, "name" => $s->name])->values())'>
@@ -454,12 +452,13 @@ body {
                                             id="remove-school-form-{{ $index }}"
                                             action="{{ $initialRemoveUrl }}"
                                             onsubmit="return confirm('Remove this assigned school from the student?');"
-                                            class="d-inline-block">
+                                            class="d-inline-block"
+                                            class="mb-1">
                                             @csrf
                                             @method('DELETE')
 
                                             <button type="submit"
-                                                    class="btn btn-sm btn-outline-danger"
+                                                    class="btn btn-sm btn-outline-danger w-100"
                                                     id="remove-school-btn-{{ $index }}"
                                                     {{ $initialDisabled ? 'disabled' : '' }}>
                                                 Remove Selected School
