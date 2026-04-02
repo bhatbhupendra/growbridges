@@ -8,7 +8,7 @@ class StoreSchoolRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->role === 'admin';
+        return auth()->check() && in_array(auth()->user()->role, ['admin', 'agent', 'student']);
     }
 
     public function rules(): array

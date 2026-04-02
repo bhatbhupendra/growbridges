@@ -58,7 +58,7 @@ body {
                 <h5 class="m-0">Add Student (Japan)</h5>
                 <div class="text-muted" style="font-size:12px;">Single form • Compact view</div>
             </div>
-            <a href="{{ route('student.index') }}" class="btn btn-secondary btn-sm">Back</a>
+            <a href="{{ url()->previous() }}" class="btn btn-secondary btn-sm">Back</a>
         </div>
 
         @if ($errors->any())

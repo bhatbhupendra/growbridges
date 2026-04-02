@@ -84,9 +84,29 @@ Route::middleware(['auth','role:admin'])->group(function () {
     });
 });
 
-//student form controller for show create and update destroy
+// //student form controller for show create and update destroy
 Route::middleware(['auth', 'role:admin,agent,student'])->group(function () {
-    Route::resource('student', StudentFormController::class);
+
+    // Show create form
+    Route::get('/student-form/create', [StudentFormController::class, 'create'])
+        ->name('student.create');
+
+    // Store new student
+    Route::post('/student-form/save', [StudentFormController::class, 'store'])
+        ->name('student.store');
+
+    // Edit form
+    Route::get('/student-form/{student}/edit', [StudentFormController::class, 'edit'])
+        ->name('student.edit');
+
+    // Update student
+    Route::put('/student-form/{student}', [StudentFormController::class, 'update'])
+        ->name('student.update');
+
+    // Delete student
+    Route::delete('/student-form/{student}', [StudentFormController::class, 'destroy'])
+        ->name('student.destroy');
+
 });
 
 

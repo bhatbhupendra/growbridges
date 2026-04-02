@@ -82,7 +82,7 @@ class StudentFormController extends Controller
         $student->delete();
 
         return redirect()
-            ->route('agent.dashboard')
+            ->route('dashboard')
             ->with('success', 'Student moved to recycle bin.');
     }
 }
