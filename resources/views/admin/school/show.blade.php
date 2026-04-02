@@ -452,9 +452,60 @@ body {
                                                     Remove Selected School
                                                 </button>
                                             </form>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-primary w-100 mt-1"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#commentModal{{ $application->id }}">
+                                                Comments
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
+                                <!-- comment on student -->
+                                <div class="modal fade" id="commentModal{{ $application->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">
+                                                    Comments - {{ $student->student_name }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <div class="modal-body">
+                                                <div class="border rounded p-2 mb-3" style="max-height:300px; overflow:auto; background:#f8f9fa;">
+                                                    @forelse($application->comments as $comment)
+                                                        <div class="mb-2 p-2 border-bottom">
+                                                            <div style="font-weight:700;">
+                                                                {{ $comment->user->name ?? 'Unknown User' }}
+                                                                <span class="text-muted" style="font-size:11px;">
+                                                                    ({{ strtoupper($comment->user->role ?? '') }})
+                                                                    • {{ $comment->created_at?->format('Y-m-d H:i') }}
+                                                                </span>
+                                                            </div>
+                                                            <div style="white-space: pre-wrap;">{{ $comment->message }}</div>
+                                                        </div>
+                                                    @empty
+                                                        <div class="text-muted">No comments yet.</div>
+                                                    @endforelse
+                                                </div>
+
+                                                <form method="POST" action="{{ route('student.applications.comment', $application) }}">
+                                                    @csrf
+                                                    <div class="mb-2">
+                                                        <label class="form-label fw-bold">Add Comment</label>
+                                                        <textarea name="message" class="form-control" rows="4" required
+                                                            placeholder="Write your comment..."></textarea>
+                                                    </div>
+
+                                                    <button type="submit" class="btn btn-primary btn-sm">
+                                                        Send Comment
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             @empty
                                 <tr>
                                     <td colspan="9" class="text-center">No students enrolled yet.</td>

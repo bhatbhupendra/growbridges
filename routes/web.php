@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\PreSchoolController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AgentController;
+use App\Http\Controllers\StudentApplicationCommentController;
 use App\Http\Controllers\StudentZipController;
 use App\Http\Controllers\Agent\AgentDashboardController;
 use App\Http\Controllers\Student\StudentDashboardController;
@@ -242,6 +243,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/school/applications/{application}/status', [SchoolDashboardController::class, 'updateStatus'])
         ->name('school.applications.status');
+});
+
+Route::middleware(['auth', 'role:admin,school'])->group(function () {
+    Route::post('/student-applications/{application}/comment', [StudentApplicationCommentController::class, 'store'])
+        ->name('student.applications.comment');
 });
 
 require __DIR__.'/auth.php';

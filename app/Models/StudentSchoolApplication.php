@@ -45,4 +45,8 @@ class StudentSchoolApplication extends Model
     {
         return $this->belongsTo(User::class, 'applied_by');
     }
+    public function comments()
+    {
+        return $this->hasMany(StudentApplicationComment::class, 'student_school_application_id')->latest();
+    }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SchoolRequiredDoc;
 use App\Models\StudentDocument;
 use App\Models\StudentSchoolApplication;
+use App\Models\StudentApplicationComment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -74,7 +75,7 @@ class SchoolDashboardController extends Controller
             ->get(['id', 'name']);
 
         $applicationsQuery = StudentSchoolApplication::query()
-            ->with(['student.creator', 'school'])
+            ->with(['student.creator', 'school', 'comments.user'])
             ->where('school_id', $school->id)
             ->whereHas('student', function ($q) {
                 $q->whereNull('deleted_at');

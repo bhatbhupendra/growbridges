@@ -85,7 +85,7 @@ class SchoolController extends Controller
             ->get(['id', 'name']);
 
         $applicationsQuery = StudentSchoolApplication::query()
-            ->with(['student.applications.school', 'student.creator', 'school'])
+            ->with(['student.applications.school', 'student.creator', 'school','comments.user'])
             ->where('school_id', $school->id)
             ->whereHas('student', function ($q) {
                 $q->whereNull('deleted_at');

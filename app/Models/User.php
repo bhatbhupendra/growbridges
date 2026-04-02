@@ -78,6 +78,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class, 'created_by');
     }
+    public function applicationComments()
+    {
+        return $this->hasMany(StudentApplicationComment::class);
+    }
 
     // -------------------------
     // ROLE HELPERS
