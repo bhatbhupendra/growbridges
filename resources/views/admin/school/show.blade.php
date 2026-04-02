@@ -297,7 +297,7 @@ body {
                                     };
 
                                     $initialRemoveUrl = $currentAssigned
-                                        ? route('school.remove-student-school', [$school, $application, $currentAssigned['application_id']])
+                                        ? route('admin.school.remove-student-school', [$school, $application, $currentAssigned['application_id']])
                                         : '';
 
                                     $initialDisabled = !$currentAssigned || $currentAssigned['is_current'];
@@ -336,8 +336,8 @@ body {
                                                         value="{{ $assignedSchool['application_id'] }}"
                                                         data-status="{{ strtolower($assignedSchool['status'] ?? 'pending') }}"
                                                         data-is-current="{{ $assignedSchool['is_current'] ? '1' : '0' }}"
-                                                        data-remove-url="{{ route('school.remove-student-school', [$school, $application, $assignedSchool['application_id']]) }}"
-                                                        data-status-url="{{ route('school.applications.status', $assignedSchool['application_id']) }}"
+                                                        data-remove-url="{{ route('admin.school.remove-student-school', [$school, $application, $assignedSchool['application_id']]) }}"
+                                                        data-status-url="{{ route('admin.school.applications.status', $assignedSchool['application_id']) }}"
                                                         {{ $currentAssigned && $currentAssigned['application_id'] == $assignedSchool['application_id'] ? 'selected' : '' }}
                                                     >
                                                         {{ $assignedSchool['school_name'] }}{{ $assignedSchool['is_current'] ? ' (Current)' : '' }}
@@ -375,7 +375,7 @@ body {
                                         @endphp
 
                                         <form method="POST"
-                                            action="{{ $currentAssigned ? route('school.applications.status', $currentAssigned['application_id']) : '#' }}"
+                                            action="{{ $currentAssigned ? route('admin.school.applications.status', $currentAssigned['application_id']) : '#' }}"
                                             id="status-form-{{ $index }}"
                                             class="mt-1">
                                             @csrf
@@ -432,7 +432,7 @@ body {
                                             <button type="button"
                                                 class="btn btn-sm btn-outline-primary w-100 mb-1 open-assign-school-modal"
                                                 data-student-name="{{ $student->student_name }}"
-                                                data-assign-url="{{ route('school.assign-student-school', [$school, $application]) }}"
+                                                data-assign-url="{{ route('admin.school.assign-student-school', [$school, $application]) }}"
                                                 data-available-schools='@json($row["available_schools"]->map(fn($s) => ["id" => $s->id, "name" => $s->name])->values())'>
                                                 Assign School
                                             </button>

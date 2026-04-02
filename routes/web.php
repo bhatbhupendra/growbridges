@@ -192,11 +192,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/school/{school}', [SchoolController::class, 'show'])
         ->name('admin.school.show');
     Route::post('/admin/school/{school}/applications/{application}/assign-school', [SchoolController::class, 'assignStudentToSchool'])
-    ->name('school.assign-student-school');
+    ->name('admin.school.assign-student-school');
     Route::delete('/admin/school/{school}/applications/{application}/remove-school/{targetApplication}', [SchoolController::class, 'removeStudentFromSchool'])
-        ->name('school.remove-student-school');
+        ->name('admin.school.remove-student-school');
     Route::post('/admin/school/applications/{application}/status', [SchoolController::class, 'updateStatus'])
-    ->name('school.applications.status');
+    ->name('admin.school.applications.status');
     
     //admin preschool
     Route::get('/admin/pre-school/{school}', [PreSchoolController::class, 'show'])
@@ -237,7 +237,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 //school dashboard
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'role:school'])->group(function () {
     Route::get('/school/dashboard', [SchoolDashboardController::class, 'index'])
         ->name('school.dashboard');
 
