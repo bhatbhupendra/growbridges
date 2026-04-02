@@ -78,13 +78,13 @@ body {
                             @forelse($agents as $index => $agent)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $agent->name }}</td>
-                                <td>{{ $agent->email }}</td>
-                                <td>{{ $agent->role }}</td>
+                                <td>{{ strtoupper($agent->name) }}</td>
+                                <td>{{ strtoupper($agent->email) }}</td>
+                                <td>{{ strtoupper($agent->role) }}</td>
                                 <td>
                                     <a class="btn btn-sm btn-success w-100"
                                         href="{{ route('admin.agents.show', $agent) }}">
-                                        View User Data
+                                        VIEW STUDENT LIST
                                     </a>
                                 </td>
                             </tr>
@@ -120,7 +120,7 @@ body {
                             @forelse($schools as $index => $school)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $school->name }}</td>
+                                <td>{{ strtoupper($school->name) }}</td>
                                 <td>
                                     <a class="btn btn-sm btn-primary"
                                         href="{{ route('admin.school-requirements.index', ['school_id' => $school->id]) }}">
@@ -170,9 +170,9 @@ body {
                             @forelse($students as $index => $student)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
-                                <td>{{ $student->name }}</td>
-                                <td>{{ $student->email }}</td>
-                                <td>{{ $student->role }}</td>
+                                <td>{{ strtoupper($student->name) }}</td>
+                                <td>{{ strtoupper($student->email) }}</td>
+                                <td>{{ strtoupper($student->role) }}</td>
                                 <td>
                                     <a class="btn btn-sm btn-success w-100" href="{{ route('admin.student.show',$student) }}">
                                         View Student Data
