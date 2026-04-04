@@ -25,6 +25,8 @@ class Student extends Model
         'nationality',
         'phone',
         'passport_number',
+        'passport_issue_date',
+        'passport_expiry_date',
         'current_address',
         'permanent_address',
         'highest_qualification',
@@ -35,8 +37,6 @@ class Student extends Model
         'japanese_test_type',
         'japanese_exam_score',
         'japanese_training_hours',
-        'sponsor_name',
-        'sponsor_relationship',
         'sponsor_name_1',
         'sponsor_relationship_1',
         'sponsor_occupation_1',
@@ -50,10 +50,18 @@ class Student extends Model
         'intake',
         'photo',
         'career_path',
+
+        'father_name',
+        'father_occupation',
+        'mother_name',
+        'mother_occupation',
+        'marital_status',
     ];
 
     protected $casts = [
         'dob' => 'date',
+        'passport_issue_date' => 'date',
+        'passport_expiry_date' => 'date',
         'graduation_year' => 'integer',
         'academic_gap_years' => 'integer',
         'japanese_training_hours' => 'integer',
