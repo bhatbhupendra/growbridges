@@ -19,12 +19,14 @@ use Illuminate\View\View;
 class PreSchoolController extends Controller
 {
     private array $allowedStatuses = [
+        'pending',
         'interview',
         'selected',
         'rejected',
         'coe-applied',
         'coe-granted',
         'coe-rejected',
+        'visa-applied',
         'visa-granted',
         'visa-rejected',
         'withdrawal',
@@ -93,7 +95,7 @@ class PreSchoolController extends Controller
         }
 
         if ($selectedNationality !== 'all' && $selectedNationality !== '') {
-            $applicationsQuery->whereHas('student', function ($q) use ($selectedNationality) {
+            $query->whereHas('student', function ($q) use ($selectedNationality) {
                 $q->where('nationality', $selectedNationality);
             });
         }
@@ -103,6 +105,12 @@ class PreSchoolController extends Controller
 
             $query->whereHas('student', function ($q) use ($agentId) {
                 $q->where('created_by', $agentId);
+            });
+        }
+
+        if ($selectedStatus !== 'all' && in_array($selectedStatus, $this->allowedStatuses, true)) {
+            $query->whereHas('student', function ($q) use ($selectedStatus) {
+                $q->where('status', $selectedStatus);
             });
         }
 

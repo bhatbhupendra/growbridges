@@ -234,14 +234,17 @@ body {
                         <label class="form-label fw-bold">Status</label>
                         <select name="status" class="form-select">
                             <option value="all" {{ $selectedStatus === 'all' ? 'selected' : '' }}>All status</option>
-                            <option value="pending" {{ $selectedStatus === 'pending' ? 'selected' : '' }}>Pending
-                            </option>
-                            <option value="accepted" {{ $selectedStatus === 'accepted' ? 'selected' : '' }}>Accepted
-                            </option>
-                            <option value="rejected" {{ $selectedStatus === 'rejected' ? 'selected' : '' }}>Rejected
-                            </option>
-                            <option value="enrolled" {{ $selectedStatus === 'enrolled' ? 'selected' : '' }}>Enrolled
-                            </option>
+                            <option value="pending" {{ $selectedStatus === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="interview" {{ $selectedStatus === 'interview' ? 'selected' : '' }}>School want to interview</option>
+                            <option value="selected" {{ $selectedStatus === 'selected' ? 'selected' : '' }}>Selected</option>
+                            <option value="rejected" {{ $selectedStatus === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                            <option value="coe-applied" {{ $selectedStatus === 'coe-applied' ? 'selected' : '' }}>COE Applied</option>
+                            <option value="coe-granted" {{ $selectedStatus === 'coe-granted' ? 'selected' : '' }}>COE Granted</option>
+                            <option value="coe-rejected" {{ $selectedStatus === 'coe-rejected' ? 'selected' : '' }}>COE Rejected</option>
+                            <option value="visa-applied" {{ $selectedStatus === 'visa-applied' ? 'selected' : '' }}>Visa Applied</option>
+                            <option value="visa-granted" {{ $selectedStatus === 'visa-granted' ? 'selected' : '' }}>Visa Granted</option>
+                            <option value="visa-rejected" {{ $selectedStatus === 'visa-rejected' ? 'selected' : '' }}>Visa Rejected</option>
+                            <option value="withdrawal" {{ $selectedStatus === 'withdrawal' ? 'selected' : '' }}>Withdrawal</option>
                         </select>
                     </div>
 
@@ -386,6 +389,9 @@ body {
                                             <option value="" disabled {{ empty($initialStatus) ? 'selected' : '' }}>
                                                 Select a Status
                                             </option>
+                                            <option value="pending" {{ $initialStatus === 'pending' ? 'selected' : '' }}>
+                                                Pending
+                                            </option>
                                             <option value="interview" {{ $initialStatus === 'interview' ? 'selected' : '' }}>
                                                 School want to interview
                                             </option>
@@ -403,6 +409,9 @@ body {
                                             </option>
                                             <option value="coe-rejected" {{ $initialStatus === 'coe-rejected' ? 'selected' : '' }}>
                                                 COE Rejected
+                                            </option>
+                                            <option value="visa-applied" {{ $initialStatus === 'visa-applied' ? 'selected' : '' }}>
+                                                Visa Applied
                                             </option>
                                             <option value="visa-granted" {{ $initialStatus === 'visa-granted' ? 'selected' : '' }}>
                                                 Visa Granted
