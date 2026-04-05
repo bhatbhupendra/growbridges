@@ -31,6 +31,11 @@ body {
     top: 16px;
 }
 
+.table {
+    table-layout: fixed;
+}
+
+
 .table thead th {
     white-space: nowrap;
 }
@@ -63,8 +68,8 @@ body {
 }
 
 .thumb {
-    width: 120px;
-    height: 120px;
+    width: 150px;
+    height: 150px;
     object-fit: cover;
     border-radius: 10px;
     border: 1px solid #ddd;
@@ -129,7 +134,7 @@ body {
 
 <div class="container page-container small-ui">
     <div class="row g-3">
-        <div class="col-lg-9">
+        <div class="col-lg-10">
 
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center">
@@ -228,15 +233,15 @@ body {
                     <table class="table table-bordered table-striped align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
-                                <th style="width:45px;" class="text-center">
+                                <th style="width:35px;" class="text-center">
                                     <input type="checkbox" onchange="toggleAllStudentExportCheckboxes(this)">
                                 </th>
-                                <th style="width:55px;">#</th>
-                                <th>Student</th>
+                                <th style="width:25px;">#</th>
+                                <th style="width:300px;">Student</th>
                                 <th style="width:260px;">Documents</th>
-                                <th style="width:130px;">Photo</th>
-                                <th style="width:150px;">Status</th>
-                                <th style="width:220px;">Action</th>
+                                <th style="width:150px;">Photo</th>
+                                <th style="width:120px;">Status</th>
+                                <th style="width:150px;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -300,7 +305,7 @@ body {
                                             @endif
 
                                             @if($student->creator)
-                                                <span class="badge badge-soft me-1">Agent: {{ $student->creator->name }}</span>
+                                                <span class="badge badge-soft me-1">Agent: {{ Str::limit($student->creator->name, 20) }}</span>
                                             @endif
                                         </div>
                                     </td>
@@ -442,7 +447,7 @@ body {
 
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <div class="card-box side-box">
                 <h6 class="mb-2" style="font-weight:800;">About this page</h6>
                 <div class="text-muted" style="font-size:12px; line-height:1.5;">

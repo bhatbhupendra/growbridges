@@ -31,6 +31,10 @@ body {
     top: 16px;
 }
 
+.table {
+    table-layout: fixed;
+}
+
 .table thead th {
     white-space: nowrap;
 }
@@ -152,7 +156,7 @@ body {
 
 <div class="container page-container small-ui">
     <div class="row g-3">
-        <div class="col-lg-9">
+        <div class="col-lg-10">
 
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center">
@@ -256,16 +260,16 @@ body {
                     <table class="table table-bordered table-striped align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
-                                <th style="width:45px;" class="text-center">
+                                <th style="width:35px;" class="text-center">
                                     <input type="checkbox" onchange="toggleAllStudentExportCheckboxes(this)">
                                 </th>
-                                <th style="width:55px;">#</th>
+                                <th style="width:25px;">#</th>
                                 <th>Student</th>
                                 <th style="width:220px;">Assigned Schools</th>
-                                <th style="width:260px;">Info</th>
-                                <th style="width:130px;">Photo</th>
-                                <th style="width:170px;">Status</th>
-                                <th style="width:220px;">Action</th>
+                                <th style="width:300px;">Info</th>
+                                <th style="width:150px;">Photo</th>
+                                <th style="width:120px;">Status</th>
+                                <th style="width:150px;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -518,7 +522,7 @@ body {
 
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <div class="card-box side-box">
                 <h6 class="mb-2" style="font-weight:800;">About this page</h6>
                 <div class="text-muted" style="font-size:12px; line-height:1.5;">
