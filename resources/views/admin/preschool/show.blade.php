@@ -112,6 +112,11 @@ body {
     color: #92400e;
     border-color: #fde68a;
 }
+.pipeline-incomplete-language {
+    background: #fff7ed;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
+}
 .pipeline-ready {
     background: #dcfce7;
     color: #166534;
@@ -181,6 +186,7 @@ body {
         return match($stage) {
             'new' => 'pipeline-new',
             'incomplete' => 'pipeline-incomplete',
+            'incomplete_language' => 'pipeline-incomplete-language',
             'ready' => 'pipeline-ready',
             'assigned' => 'pipeline-assigned',
             'interview' => 'pipeline-interview',
@@ -239,6 +245,10 @@ body {
                     <a href="{{ route('admin.preschool.show', ['school' => $school->id, 'pipeline' => 'incomplete', 'intake' => $selectedIntake, 'agent_id' => $selectedAgent, 'status' => $selectedStatus, 'nationality' => $selectedNationality, 'search' => $search]) }}"
                        class="filter-chip {{ $selectedPipeline === 'incomplete' ? 'active' : '' }}">
                         Incomplete ({{ $counts['incomplete'] ?? 0 }})
+                    </a>
+                    <a href="{{ route('admin.preschool.show', ['school' => $school->id, 'pipeline' => 'incomplete_language', 'intake' => $selectedIntake, 'agent_id' => $selectedAgent, 'status' => $selectedStatus, 'nationality' => $selectedNationality, 'search' => $search]) }}"
+                        class="filter-chip {{ $selectedPipeline === 'incomplete_language' ? 'active' : '' }}">
+                        Incomplete Language ({{ $counts['incomplete_language'] ?? 0 }})
                     </a>
                     <a href="{{ route('admin.preschool.show', ['school' => $school->id, 'pipeline' => 'ready', 'intake' => $selectedIntake, 'agent_id' => $selectedAgent, 'status' => $selectedStatus, 'nationality' => $selectedNationality, 'search' => $search]) }}"
                        class="filter-chip {{ $selectedPipeline === 'ready' ? 'active' : '' }}">
@@ -501,6 +511,7 @@ body {
                                             <select name="pre_school_status" class="form-select form-select-sm mb-1" required>
                                                 <option value="new" {{ $reviewStatus === 'new' ? 'selected' : '' }}>New / Unreviewed</option>
                                                 <option value="incomplete" {{ $reviewStatus === 'incomplete' ? 'selected' : '' }}>Incomplete</option>
+                                                <option value="incomplete_language" {{ $reviewStatus === 'incomplete_language' ? 'selected' : '' }}>Incomplete (Language)</option>
                                                 <option value="ready" {{ $reviewStatus === 'ready' ? 'selected' : '' }}>Ready for Assignment</option>
                                             </select>
 
@@ -587,6 +598,7 @@ body {
                     <div class="mt-2">
                         • <b>New</b> → Not reviewed<br>
                         • <b>Incomplete</b> → Missing info/docs<br>
+                        • <b>Incomplete (Language)</b> → Language requirement not met<br>
                         • <b>Ready</b> → Ready for assignment<br>
                         • <b>Assigned</b> → Sent to schools<br>
                         • <b>Interview</b> → School requested interview<br>

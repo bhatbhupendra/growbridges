@@ -36,6 +36,7 @@ class PreSchoolController extends Controller
     private array $allowedPreSchoolStatuses = [
         'new',
         'incomplete',
+        'incomplete_language',
         'ready',
     ];
 
@@ -223,6 +224,7 @@ class PreSchoolController extends Controller
             'all'          => $rows->count(),
             'new'          => $rows->where('pipeline_stage', 'new')->count(),
             'incomplete'   => $rows->where('pipeline_stage', 'incomplete')->count(),
+            'incomplete_language' => $rows->where('pipeline_stage', 'incomplete_language')->count(),
             'ready'        => $rows->where('pipeline_stage', 'ready')->count(),
             'assigned'     => $rows->where('pipeline_stage', 'assigned')->count(),
             'interview'    => $rows->where('pipeline_stage', 'interview')->count(),
