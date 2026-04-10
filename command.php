@@ -40,7 +40,7 @@ put public folder inside legendresources and legend.growbrideges.com
 
 APP_NAME=Laravel
 APP_ENV=local
-APP_KEY=base64:S7FVRDGWBNBeRW4bMsI0pwn/98+I3Rh/D1fsuv3zzf8=
+APP_KEY=
 APP_DEBUG=true
 APP_URL=http://legend.growbridges.com
 
