@@ -24,6 +24,7 @@ class StudentFormController extends Controller
         DB::transaction(function () use ($request, &$student) {
             $data = $request->validated();
 
+            $data['pre_school_status'] = 'new';
             $data['created_by'] = auth()->id();
 
             if (!empty($data['dob'])) {

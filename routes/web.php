@@ -207,6 +207,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('preschool.remove-student-school');
     Route::post('/admin/pre-school/applications/{application}/status', [PreSchoolController::class, 'updateStatus'])
         ->name('pre-school.applications.status');
+    Route::post('/pre-school/{application}/review-update', [PreSchoolController::class, 'updateReview'])
+    ->name('preschool.review.update');
 });
 
 // //admin student page
@@ -248,6 +250,12 @@ Route::middleware(['auth', 'role:school'])->group(function () {
 Route::middleware(['auth', 'role:admin,school'])->group(function () {
     Route::post('/student-applications/{application}/comment', [StudentApplicationCommentController::class, 'store'])
         ->name('student.applications.comment');
+});
+
+//route for the admin helper
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::post('/admin/pre-school/{student}/status', [App\Http\Controllers\Admin\PreSchoolController::class, 'updateStatus'])
+        ->name('admin.pre-school.status');
 });
 
 require __DIR__.'/auth.php';

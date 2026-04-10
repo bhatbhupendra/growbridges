@@ -56,6 +56,10 @@ class Student extends Model
         'mother_name',
         'mother_occupation',
         'marital_status',
+
+        'pre_school_status',
+        'admin_review_notes',
+        'admin_reviewed_at',
     ];
 
     protected $casts = [
@@ -70,6 +74,8 @@ class Student extends Model
         'sponsor_savings_amount_1' => 'decimal:2',
         'sponsor_annual_income_2' => 'decimal:2',
         'sponsor_savings_amount_2' => 'decimal:2',
+
+        'admin_reviewed_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -101,5 +107,64 @@ class Student extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(StudentDocument::class);
+    }
+    public function getPipelineStageAttribute(): string
+    {
+        $applications = $this->applications
+            ->where('school_id', '!=', 1); // exclude Pre-School
+
+        if ($applications->isEmpty()) {
+            return $this->pre_school_status ?: 'new';
+        }
+
+        $statuses = $applications->pluck('status')->filter()->values();
+
+        if ($statuses->contains(fn ($status) => in_array($status, ['selected', 'coe-applied', 'coe-granted']))) {
+            return 'selected';
+        }
+
+        if ($statuses->contains('interview')) {
+            return 'interview';
+        }
+
+        if ($applications->count() > 0 && $statuses->count() > 0 && $applications->count() === $statuses->filter(fn ($s) => $s === 'rejected')->count()) {
+            return 'rejected_all';
+        }
+
+        return 'assigned';
+    }
+    public function getProfileChecklistAttribute(): array
+    {
+        return [
+            'student_name'       => !empty($this->student_name),
+            'student_name_jp'    => !empty($this->student_name_jp),
+            'dob'                => !empty($this->dob),
+            'gender'             => !empty($this->gender),
+            'nationality'        => !empty($this->nationality),
+            'phone'              => !empty($this->phone),
+            'passport_number'    => !empty($this->passport_number),
+            'current_address'    => !empty($this->current_address),
+            'permanent_address'  => !empty($this->permanent_address),
+            'photo'              => !empty($this->photo),
+        ];
+    }
+
+    public function getProfileCompletionPercentAttribute(): int
+    {
+        $checklist = $this->profile_checklist;
+        $total = count($checklist);
+        $completed = collect($checklist)->filter()->count();
+
+        return $total > 0 ? (int) round(($completed / $total) * 100) : 0;
+    }
+
+    public function getMissingProfileFieldsAttribute(): array
+    {
+        return collect($this->profile_checklist)
+            ->filter(fn ($completed) => !$completed)
+            ->keys()
+            ->map(fn ($field) => str_replace('_', ' ', ucfirst($field)))
+            ->values()
+            ->toArray();
     }
 }

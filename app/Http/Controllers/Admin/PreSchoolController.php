@@ -4,16 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateSchoolRequest;
-use App\Models\User;
 use App\Models\School;
 use App\Models\SchoolRequiredDoc;
+use App\Models\Student;
 use App\Models\StudentDocument;
 use App\Models\StudentSchoolApplication;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class PreSchoolController extends Controller
@@ -31,21 +32,26 @@ class PreSchoolController extends Controller
         'visa-rejected',
         'withdrawal',
     ];
+
+    private array $allowedPreSchoolStatuses = [
+        'new',
+        'incomplete',
+        'ready',
+    ];
+
     public function show(Request $request, School $school): View
     {
-        abort_unless(auth()->user()->role === 'admin', 403);
+        abort_unless(auth()->check() && auth()->user()->role === 'admin', 403);
 
-        $selectedIntake = trim((string) $request->query('intake', 'all'));
-        $selectedAgent = trim((string) $request->query('agent_id', 'all'));
-        $selectedStatus = trim((string) $request->query('status', 'all'));
-        $selectedNationality = trim((string) $request->query('nationality', 'all'));
-
-
+        $selectedIntake       = trim((string) $request->query('intake', 'all'));
+        $selectedAgent        = trim((string) $request->query('agent_id', 'all'));
+        $selectedStatus       = trim((string) $request->query('status', 'all'));
+        $selectedNationality  = trim((string) $request->query('nationality', 'all'));
+        $selectedPipeline     = trim((string) $request->query('pipeline', 'all'));
+        $search               = trim((string) $request->query('search', ''));
 
         $studentCount = StudentSchoolApplication::where('school_id', $school->id)->count();
-
         $user = User::where('school_id', $school->id)->first();
-        // dd($user);
 
         $intakes = StudentSchoolApplication::query()
             ->join('students', 'students.id', '=', 'student_school_applications.student_id')
@@ -81,21 +87,25 @@ class PreSchoolController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $query = StudentSchoolApplication::query()
-            ->with(['student.applications.school', 'student.creator'])
+        $baseQuery = StudentSchoolApplication::query()
+            ->with([
+                'school',
+                'student.creator',
+                'student.applications.school',
+            ])
             ->where('school_id', $school->id)
             ->whereHas('student', function ($q) {
                 $q->whereNull('deleted_at');
             });
 
         if ($selectedIntake !== 'all' && $selectedIntake !== '') {
-            $query->whereHas('student', function ($q) use ($selectedIntake) {
+            $baseQuery->whereHas('student', function ($q) use ($selectedIntake) {
                 $q->where('intake', $selectedIntake);
             });
         }
 
         if ($selectedNationality !== 'all' && $selectedNationality !== '') {
-            $query->whereHas('student', function ($q) use ($selectedNationality) {
+            $baseQuery->whereHas('student', function ($q) use ($selectedNationality) {
                 $q->where('nationality', $selectedNationality);
             });
         }
@@ -103,20 +113,31 @@ class PreSchoolController extends Controller
         if ($selectedAgent !== 'all' && ctype_digit((string) $selectedAgent)) {
             $agentId = (int) $selectedAgent;
 
-            $query->whereHas('student', function ($q) use ($agentId) {
+            $baseQuery->whereHas('student', function ($q) use ($agentId) {
                 $q->where('created_by', $agentId);
             });
         }
 
         if ($selectedStatus !== 'all' && in_array($selectedStatus, $this->allowedStatuses, true)) {
-            $query->whereHas('student', function ($q) use ($selectedStatus) {
-                $q->where('status', $selectedStatus);
+            $baseQuery->where('status', $selectedStatus);
+        }
+
+        if ($search !== '') {
+            $baseQuery->whereHas('student', function ($q) use ($search) {
+                $q->where(function ($qq) use ($search) {
+                    $qq->where('student_name', 'like', "%{$search}%")
+                        ->orWhere('student_name_jp', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('passport_number', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%")
+                        ->orWhere('intake', 'like', "%{$search}%");
+                });
             });
         }
 
-        $applications = $query->latest()->get();
+        $applications = $baseQuery->latest()->get();
 
-        $rows = $applications->map(function ($application) use ($allSchools) {
+        $rows = $applications->map(function ($application) use ($allSchools, $school) {
             $student = $application->student;
             $currentSchool = $application->school;
 
@@ -154,10 +175,10 @@ class PreSchoolController extends Controller
                 ->map(function ($app) use ($application) {
                     return [
                         'application_id' => $app->id,
-                        'school_id' => $app->school_id,
-                        'school_name' => $app->school->name,
-                        'status' => $app->status ?? 'pending',
-                        'is_current' => (int) $app->id === (int) $application->id,
+                        'school_id'      => $app->school_id,
+                        'school_name'    => $app->school->name,
+                        'status'         => $app->status ?? 'pending',
+                        'is_current'     => (int) $app->id === (int) $application->id,
                     ];
                 })
                 ->values();
@@ -166,44 +187,77 @@ class PreSchoolController extends Controller
                 ->reject(fn ($s) => in_array((int) $s->id, $assignedSchoolIds, true))
                 ->values();
 
-            $photoDocument = StudentDocument::query()
-                ->where('student_id', $student->id)
-                ->whereHas('documentType', function ($q) {
-                    $q->whereIn('file_type', ['jpg', 'jpeg']);
-                })
-                ->latest()
-                ->first();
+            $photoUrl = null;
+            if (!empty($student->photo)) {
+                $photoUrl = asset('storage/' . ltrim($student->photo, '/'));
+            } else {
+                $photoDocument = StudentDocument::query()
+                    ->where('student_id', $student->id)
+                    ->whereHas('documentType', function ($q) {
+                        $q->whereIn('file_type', ['jpg', 'jpeg']);
+                    })
+                    ->latest()
+                    ->first();
+
+                $photoUrl = $photoDocument ? Storage::url($photoDocument->file_path) : null;
+            }
+
+            $profileMeta = $this->buildProfileMeta($student);
 
             return [
-                'application' => $application,
-                'student' => $student,
-                'school' => $currentSchool,
-                'docs' => $docOutput,
-                'photo_url' => $photoDocument ? Storage::url($photoDocument->file_path) : null,
-                'available_schools' => $availableSchools,
-                'assigned_schools' => $assignedSchools,
+                'application'                  => $application,
+                'student'                      => $student,
+                'school'                       => $currentSchool,
+                'docs'                         => $docOutput,
+                'photo_url'                    => $photoUrl,
+                'available_schools'            => $availableSchools,
+                'assigned_schools'             => $assignedSchools,
+                'pipeline_stage'               => $this->getPipelineStage($student),
+                'profile_completion_percent'   => $profileMeta['completion_percent'],
+                'missing_profile_fields'       => $profileMeta['missing_fields'],
+                'assigned_real_school_count'   => $student->applications->where('school_id', '!=', 1)->count(),
             ];
-        });
+        })->values();
+
+        $counts = [
+            'all'          => $rows->count(),
+            'new'          => $rows->where('pipeline_stage', 'new')->count(),
+            'incomplete'   => $rows->where('pipeline_stage', 'incomplete')->count(),
+            'ready'        => $rows->where('pipeline_stage', 'ready')->count(),
+            'assigned'     => $rows->where('pipeline_stage', 'assigned')->count(),
+            'interview'    => $rows->where('pipeline_stage', 'interview')->count(),
+            'selected'     => $rows->where('pipeline_stage', 'selected')->count(),
+            'rejected_all' => $rows->where('pipeline_stage', 'rejected_all')->count(),
+        ];
+
+        if ($selectedPipeline !== 'all') {
+            $rows = $rows->filter(function ($row) use ($selectedPipeline) {
+                return $row['pipeline_stage'] === $selectedPipeline;
+            })->values();
+        }
 
         return view('admin.preschool.show', [
-            'school' => $school,
-            'studentCount' => $studentCount,
-            'user'=>$user,
-            'intakes' => $intakes,
-            'nationalities' => $nationalities,
-            'agents' => $agents,
-            'applications' => $applications,
-            'rows' => $rows,
-            'selectedNationality' => $selectedNationality,
-            'selectedIntake' => $selectedIntake,
-            'selectedAgent' => $selectedAgent,
-            'selectedStatus' => $selectedStatus,
+            'school'               => $school,
+            'studentCount'         => $studentCount,
+            'user'                 => $user,
+            'intakes'              => $intakes,
+            'nationalities'        => $nationalities,
+            'agents'               => $agents,
+            'applications'         => $applications,
+            'rows'                 => $rows,
+            'counts'               => $counts,
+            'selectedNationality'  => $selectedNationality,
+            'selectedIntake'       => $selectedIntake,
+            'selectedAgent'        => $selectedAgent,
+            'selectedStatus'       => $selectedStatus,
+            'selectedPipeline'     => $selectedPipeline,
+            'search'               => $search,
         ]);
     }
 
     public function assignStudentToSchool(Request $request, School $school, StudentSchoolApplication $application): RedirectResponse
     {
-        abort_unless(auth()->user()->role === 'admin', 403);
+        abort_unless(auth()->check() && auth()->user()->role === 'admin', 403);
 
         if ((int) $application->school_id !== (int) $school->id) {
             abort(404);
@@ -218,13 +272,13 @@ class PreSchoolController extends Controller
         $newApp = StudentSchoolApplication::firstOrCreate(
             [
                 'student_id' => $student->id,
-                'school_id' => (int) $data['school_id'],
+                'school_id'  => (int) $data['school_id'],
             ],
             [
-                'status' => 'pending',
+                'status'      => 'pending',
                 'assigned_by' => auth()->id(),
-                'applied_by' => auth()->id(),
-                'applied_at' => now(),
+                'applied_by'  => auth()->id(),
+                'applied_at'  => now(),
             ]
         );
 
@@ -245,7 +299,7 @@ class PreSchoolController extends Controller
         StudentSchoolApplication $application,
         StudentSchoolApplication $targetApplication
     ): RedirectResponse {
-        abort_unless(auth()->user()->role === 'admin', 403);
+        abort_unless(auth()->check() && auth()->user()->role === 'admin', 403);
 
         if ((int) $application->school_id !== (int) $school->id) {
             abort(404);
@@ -257,7 +311,6 @@ class PreSchoolController extends Controller
                 ->with('error', 'Selected school assignment does not belong to this student.');
         }
 
-        // optional: stop removing the current application row itself
         if ((int) $targetApplication->id === (int) $application->id) {
             return redirect()
                 ->route('admin.preschool.show', $school)
@@ -272,9 +325,10 @@ class PreSchoolController extends Controller
             ->route('admin.preschool.show', $school)
             ->with('success', "Student removed from {$targetSchoolName} successfully.");
     }
+
     public function update(UpdateSchoolRequest $request, School $school): RedirectResponse
     {
-        abort_unless(auth()->user()->role === 'admin', 403);
+        abort_unless(auth()->check() && auth()->user()->role === 'admin', 403);
 
         $school->update([
             'name' => trim($request->name),
@@ -287,7 +341,7 @@ class PreSchoolController extends Controller
 
     public function destroy(School $school): RedirectResponse
     {
-        abort_unless(auth()->user()->role === 'admin', 403);
+        abort_unless(auth()->check() && auth()->user()->role === 'admin', 403);
 
         $studentCount = StudentSchoolApplication::where('school_id', $school->id)->count();
 
@@ -307,11 +361,9 @@ class PreSchoolController extends Controller
             ->with('success', 'School deleted successfully!');
     }
 
-     public function updateStatus(Request $request, StudentSchoolApplication $application): RedirectResponse
+    public function updateStatus(Request $request, StudentSchoolApplication $application): RedirectResponse
     {
         abort_unless(Auth::check() && Auth::user()->role === 'admin', 403);
-
-        $user = Auth::user();
 
         $data = $request->validate([
             'status' => ['required', 'in:' . implode(',', $this->allowedStatuses)],
@@ -321,8 +373,88 @@ class PreSchoolController extends Controller
             'status' => $data['status'],
         ]);
 
-        return redirect()
-            ->route('admin.preschool.show',1)
-            ->with('success', 'Application status updated successfully.');
+        return back()->with('success', 'Application status updated successfully.');
+    }
+
+    public function updateReview(Request $request, StudentSchoolApplication $application): RedirectResponse
+    {
+        abort_unless(Auth::check() && Auth::user()->role === 'admin', 403);
+
+        $data = $request->validate([
+            'pre_school_status'   => ['required', 'in:' . implode(',', $this->allowedPreSchoolStatuses)],
+            'admin_review_notes'  => ['nullable', 'string'],
+        ]);
+
+        $student = $application->student;
+
+        $student->update([
+            'pre_school_status'  => $data['pre_school_status'],
+            'admin_review_notes' => $data['admin_review_notes'] ?? null,
+            'admin_reviewed_at'  => now(),
+        ]);
+
+        return back()->with('success', 'Pre-school review updated successfully.');
+    }
+
+    private function getPipelineStage(Student $student): string
+    {
+        $realApplications = $student->applications->where('school_id', '!=', 1);
+
+        if ($realApplications->isEmpty()) {
+            return $student->pre_school_status ?: 'new';
+        }
+
+        $statuses = $realApplications
+            ->pluck('status')
+            ->filter()
+            ->map(fn ($status) => strtolower((string) $status))
+            ->values();
+
+        if ($statuses->contains(fn ($status) => in_array($status, ['selected', 'coe-applied', 'coe-granted', 'visa-applied', 'visa-granted'], true))) {
+            return 'selected';
+        }
+
+        if ($statuses->contains('interview')) {
+            return 'interview';
+        }
+
+        if ($realApplications->count() > 0 && $statuses->count() === $realApplications->count() && $statuses->every(fn ($status) => in_array($status, ['rejected', 'coe-rejected', 'visa-rejected', 'withdrawal'], true))) {
+            return 'rejected_all';
+        }
+
+        return 'assigned';
+    }
+
+    private function buildProfileMeta(Student $student): array
+    {
+        $fields = [
+            'Student name'        => !empty($student->student_name),
+            'Student name JP'     => !empty($student->student_name_jp),
+            'DOB'                 => !empty($student->dob),
+            'Gender'              => !empty($student->gender),
+            'Nationality'         => !empty($student->nationality),
+            'Phone'               => !empty($student->phone),
+            'Passport number'     => !empty($student->passport_number),
+            'Current address'     => !empty($student->current_address),
+            'Permanent address'   => !empty($student->permanent_address),
+            'Photo'               => !empty($student->photo),
+            'Father name'         => !empty($student->father_name),
+            'Father occupation'   => !empty($student->father_occupation),
+            'Mother name'         => !empty($student->mother_name),
+            'Mother occupation'   => !empty($student->mother_occupation),
+            'Marital status'      => !empty($student->marital_status),
+        ];
+
+        $total = count($fields);
+        $done = collect($fields)->filter()->count();
+
+        return [
+            'completion_percent' => $total > 0 ? (int) round(($done / $total) * 100) : 0,
+            'missing_fields'     => collect($fields)
+                ->filter(fn ($ok) => !$ok)
+                ->keys()
+                ->values()
+                ->toArray(),
+        ];
     }
 }
