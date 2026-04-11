@@ -8,7 +8,6 @@ use App\Http\Controllers\Admin\SchoolRequirementController;
 use App\Http\Controllers\StudentFileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\SchoolController;
-use App\Http\Controllers\Admin\PreSchoolController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AgentController;
@@ -17,6 +16,8 @@ use App\Http\Controllers\StudentZipController;
 use App\Http\Controllers\Agent\AgentDashboardController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\School\SchoolDashboardController;
+
+use App\Livewire\Admin\PreSchoolDashboard;
 
 
 use Illuminate\Support\Facades\Route;
@@ -199,16 +200,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     ->name('admin.school.applications.status');
     
     //admin preschool
-    Route::get('/admin/pre-school/{school}', [PreSchoolController::class, 'show'])
-        ->name('admin.preschool.show');
-    Route::post('admin/pre-school/{school}/applications/{application}/assign-school', [PreSchoolController::class, 'assignStudentToSchool'])
-        ->name('preschool.assign-student-school');
-    Route::delete('/admin/pre-school/{school}/applications/{application}/remove-school/{targetApplication}',[PreSchoolController::class, 'removeStudentFromSchool'])
-        ->name('preschool.remove-student-school');
-    Route::post('/admin/pre-school/applications/{application}/status', [PreSchoolController::class, 'updateStatus'])
-        ->name('pre-school.applications.status');
-    Route::post('/pre-school/{application}/review-update', [PreSchoolController::class, 'updateReview'])
-    ->name('preschool.review.update');
+    Route::middleware(['auth', 'role:admin'])->group(function () {
+        Route::get('/admin/pre-school/{school}', PreSchoolDashboard::class)
+            ->name('admin.preschool.show');
+    });
 });
 
 // //admin student page
@@ -250,12 +245,6 @@ Route::middleware(['auth', 'role:school'])->group(function () {
 Route::middleware(['auth', 'role:admin,school'])->group(function () {
     Route::post('/student-applications/{application}/comment', [StudentApplicationCommentController::class, 'store'])
         ->name('student.applications.comment');
-});
-
-//route for the admin helper
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::post('/admin/pre-school/{student}/status', [App\Http\Controllers\Admin\PreSchoolController::class, 'updateStatus'])
-        ->name('admin.pre-school.status');
 });
 
 require __DIR__.'/auth.php';
