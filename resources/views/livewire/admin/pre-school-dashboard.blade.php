@@ -419,17 +419,18 @@
                                                                 aria-controls="assignedSchoolCollapse-{{ $assignedSchool['application_id'] }}"
                                                                 style="cursor:pointer;"
                                                             >
-                                                                <div class="fw-bold">
-                                                                    {{ $assignedSchool['school_name'] }}
-                                                                    @if($assignedSchool['is_current'])
-                                                                        <span class="text-muted">(Current)</span>
-                                                                    @endif
-                                                                    <span>▾</span>
+                                                                <div class="fw-bold d-flex align-items-center gap-1 flex-wrap">
+                                                                    <span>
+                                                                        {{ $assignedSchool['school_name'] }}
+                                                                        @if($assignedSchool['is_current'])
+                                                                            <span class="text-muted">(Current)</span>
+                                                                        @endif
+                                                                    </span>
+                                                                    <span class="status-chip {{ $schoolStatusClass }}">
+                                                                        {{ ucfirst($schoolStatusValue) }}
+                                                                    </span>
+                                                                    <span>▾</span>    
                                                                 </div>
-
-                                                                <span class="status-chip {{ $schoolStatusClass }}">
-                                                                    {{ ucfirst($schoolStatusValue) }}
-                                                                </span>
                                                             </div>
 
                                                             <div
@@ -437,6 +438,7 @@
                                                                 class="accordion-collapse collapse mt-2"
                                                                 data-bs-parent="#assignedSchoolsAccordion-{{ $application->id }}"
                                                             >
+                                                                
                                                                 <select
                                                                     class="form-select form-select-sm mb-2"
                                                                     wire:model="schoolStatusInputs.{{ $assignedSchool['application_id'] }}"
@@ -448,6 +450,13 @@
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
+                                                                <a
+                                                                href="{{ route('student.file.show', [$st->id, $assignedSchool['school_id']]) }}"
+                                                                class="btn btn-sm btn-success w-100 mb-1"
+                                                                onclick="event.stopPropagation();"
+                                                                >
+                                                                    View Student
+                                                                </a>
 
                                                                 <div class="d-flex gap-1">
                                                                     <button
@@ -520,11 +529,6 @@
 
                                         <td>
                                             <div class="d-flex flex-wrap gap-1">
-                                                <a class="btn btn-sm btn-success w-100 mb-1"
-                                                   href="{{ route('student.file.show', [$st, $school]) }}">
-                                                    View Student
-                                                </a>
-
                                                 <a class="btn btn-sm btn-primary w-100 mb-1"
                                                    href="{{ route('student.zip', $st) }}">
                                                     ZIP Files
