@@ -321,6 +321,7 @@
                                     <th style="width:200px;">Pipeline</th>
                                     <th style="width:240px;">Assigned Schools / Status</th>
                                     <th style="width:160px;">Photo</th>
+                                    <th style="width:260px;">Language Strength</th>
                                     <th style="width:240px;">Pre-School Review</th>
                                     <th style="width:130px;">Action</th>
                                 </tr>
@@ -492,6 +493,96 @@
                                             @else
                                                 <span class="text-muted">No photo</span>
                                             @endif
+                                        </td>
+
+                                        <td>
+                                            <div class="row g-1">
+                                                <div class="mb-2 text-center">
+                                                    <div class="fw-bold">
+                                                        Overall
+                                                        <span class="badge bg-dark ms-1">
+                                                            {{
+                                                                isset($strengthInputs[$st->id])
+                                                                ? round(
+                                                                    (
+                                                                        ($strengthInputs[$st->id]['hiragana'] ?? 0) +
+                                                                        ($strengthInputs[$st->id]['katagana'] ?? 0) +
+                                                                        ($strengthInputs[$st->id]['numbers'] ?? 0) +
+                                                                        ($strengthInputs[$st->id]['interview'] ?? 0)
+                                                                    ) / 4
+                                                                )
+                                                                : ($st->strength->overall ?? 0)
+                                                            }}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <label class="form-label mb-1 fw-bold">Hiragana</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            max="100"
+                                                            class="form-control"
+                                                            wire:model.defer="strengthInputs.{{ $st->id }}.hiragana"
+                                                        >
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <label class="form-label mb-1 fw-bold">Katagana</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            max="100"
+                                                            class="form-control"
+                                                            wire:model.defer="strengthInputs.{{ $st->id }}.katagana"
+                                                        >
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <label class="form-label mb-1 fw-bold">Numbers</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            max="100"
+                                                            class="form-control"
+                                                            wire:model.defer="strengthInputs.{{ $st->id }}.numbers"
+                                                        >
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-6">
+                                                    <label class="form-label mb-1 fw-bold">Interview</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            max="100"
+                                                            class="form-control"
+                                                            wire:model.defer="strengthInputs.{{ $st->id }}.interview"
+                                                        >
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12 mt-1">
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-outline-success w-100"
+                                                        wire:click="saveStrength({{ $st->id }})"
+                                                    >
+                                                        Save Strength
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </td>
 
                                         <td>

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use App\Models\StudentStrength;
 
 #[Layout('layouts.app')]
 class PreSchoolDashboard extends Component
@@ -65,6 +66,7 @@ class PreSchoolDashboard extends Component
 
     public array $reviewInputs = [];
     public array $schoolStatusInputs = [];
+    public array $strengthInputs = [];
 
     public function mount(School $school): void
     {
@@ -259,6 +261,7 @@ class PreSchoolDashboard extends Component
                 'school',
                 'student.creator',
                 'student.applications.school',
+                'student.strength',
             ])
             ->where('school_id', $this->school->id)
             ->whereHas('student', function ($q) {
@@ -309,6 +312,15 @@ class PreSchoolDashboard extends Component
         $rows = $applications->map(function ($application) use ($allSchools) {
             $student = $application->student;
             $currentSchool = $application->school;
+
+            if (! isset($this->strengthInputs[$student->id])) {
+                $this->strengthInputs[$student->id] = [
+                    'hiragana' => (int) ($student->strength->hiragana ?? 0),
+                    'katagana' => (int) ($student->strength->katagana ?? 0),
+                    'numbers' => (int) ($student->strength->numbers ?? 0),
+                    'interview' => (int) ($student->strength->interview ?? 0),
+                ];
+            }
 
             $docOutput = collect();
 
@@ -502,5 +514,37 @@ class PreSchoolDashboard extends Component
                 ->values()
                 ->toArray(),
         ];
+    }
+
+    public function saveStrength(int $studentId): void
+    {
+        $input = $this->strengthInputs[$studentId] ?? null;
+
+        if (! $input) {
+            session()->flash('error', 'Strength data not found.');
+            return;
+        }
+
+        $data = [
+            'overall' =>  (int) round(($input['hiragana'] + $input['katagana'] + $input['numbers'] + $input['interview']) / 4),
+            'hiragana' => (int) ($input['hiragana'] ?? 0),
+            'katagana' => (int) ($input['katagana'] ?? 0),
+            'numbers' => (int) ($input['numbers'] ?? 0),
+            'interview' => (int) ($input['interview'] ?? 0),
+        ];
+
+        foreach ($data as $key => $value) {
+            if ($value < 0 || $value > 100) {
+                session()->flash('error', ucfirst($key) . ' must be between 0 and 100.');
+                return;
+            }
+        }
+
+        StudentStrength::updateOrCreate(
+            ['student_id' => $studentId],
+            $data
+        );
+
+        session()->flash('success', 'Student language strength updated successfully.');
     }
 }

@@ -253,4 +253,9 @@ Route::middleware(['auth', 'role:admin,school'])->group(function () {
         ->name('student.applications.comment');
 });
 
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::post('/admin/students/{student}/strength', [App\Http\Controllers\Admin\StudentStrengthController::class, 'update'])
+        ->name('admin.students.strength.update');
+});
+
 require __DIR__.'/auth.php';

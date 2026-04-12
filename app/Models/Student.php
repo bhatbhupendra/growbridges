@@ -167,4 +167,8 @@ class Student extends Model
             ->values()
             ->toArray();
     }
+    public function strength()
+    {
+        return $this->hasOne(StudentStrength::class);
+    }
 }
