@@ -18,6 +18,7 @@ use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\School\SchoolDashboardController;
 
 use App\Livewire\Admin\PreSchoolDashboard;
+use App\Livewire\Admin\AgentPage;
 
 
 use Illuminate\Support\Facades\Route;
@@ -171,7 +172,7 @@ Route::middleware(['auth'])->get('/dashboard', function () {
 
 // admin agent page
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin/agents/{agent}', [AgentController::class, 'show'])
+    Route::get('/admin/agents/{agent}', AgentPage::class)
         ->name('admin.agents.show');
 
     Route::put('/admin/agents/{agent}', [AgentController::class, 'update'])
@@ -179,13 +180,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::delete('/admin/agents/{agent}', [AgentController::class, 'destroy'])
         ->name('admin.agents.destroy');
+
     Route::post('/admin/agents/{agent}/students/{student}/assign-school', [AgentController::class, 'assignStudentToSchool'])
-    ->name('agent.assign-student-school');
-    Route::delete('/admin/agents/{agent}/students/{student}/remove-school/{targetApplication}', [AgentController::class, 'removeStudentFromSchool'])
+        ->name('agent.assign-student-school');
+
+    Route::delete('/admin/agents/{agent}/students/{student}/applications/{targetApplication}', [AgentController::class, 'removeStudentFromSchool'])
         ->name('agent.remove-student-school');
+
     Route::post('/admin/agents/{agent}/applications/{application}/status', [AgentController::class, 'updateStatus'])
         ->name('agent.applications.status');
-
 });
 
 //admin school page
