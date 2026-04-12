@@ -1,4 +1,4 @@
-<x-app-layout>
+<div>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
@@ -155,9 +155,41 @@ body {
     font-weight: 600;
     border-radius: 8px;
 }
+
+.filter-chip {
+    text-decoration: none;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-weight: 700;
+    border: 1px solid #dbe1ea;
+    color: #334155;
+    background: #fff;
+}
+
+.filter-chip.active {
+    background: #111827;
+    border-color: #111827;
+    color: #fff;
+}
 </style>
 
-<div class="container page-container small-ui">
+@php
+    function pipelineClass($stage) {
+        return match($stage) {
+            'new' => 'chip-pending',
+            'incomplete' => 'chip-pending',
+            'incomplete_language' => 'chip-pending',
+            'ready' => 'chip-accepted',
+            'assigned' => 'chip-accepted',
+            'interview' => 'chip-accepted',
+            'selected' => 'chip-enrolled',
+            'rejected_all' => 'chip-rejected',
+            default => 'chip-pending',
+        };
+    }
+@endphp
+
+<div class="container page-container small-ui" wire:loading.class="opacity-50">
     <div class="row g-3">
         <div class="col-lg-9">
 
@@ -185,6 +217,35 @@ body {
 
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="m-0" style="font-weight:800;">Pipeline</h6>
+                    <span class="badge badge-soft">{{ $students->count() }} Showing</span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach([
+                        'all' => 'All',
+                        'new' => 'New',
+                        'incomplete' => 'Incomplete',
+                        'incomplete_language' => 'Incomplete Language',
+                        'ready' => 'Ready',
+                        'assigned' => 'Assigned',
+                        'interview' => 'Interview',
+                        'selected' => 'Selected',
+                        'rejected_all' => 'Rejected by All',
+                    ] as $key => $label)
+                        <button
+                            type="button"
+                            wire:click="setPipeline('{{ $key }}')"
+                            class="filter-chip {{ $pipeline === $key ? 'active' : '' }}"
+                        >
+                            {{ $label }} ({{ $counts[$key] ?? 0 }})
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="card-box">
+                <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="m-0" style="font-weight:800;">Students List</h6>
 
                     <div class="d-flex gap-2">
@@ -197,13 +258,13 @@ body {
                     </div>
                 </div>
 
-                <form method="GET" class="filter-bar row g-2 align-items-end mb-2">
+                <form class="filter-bar row g-2 align-items-end mb-2">
                     <div class="col-md-4">
                         <label class="form-label mb-1" style="font-weight:800;">Intake</label>
-                        <select name="intake" class="form-select">
-                            <option value="all" {{ $selectedIntake === 'all' ? 'selected' : '' }}>All intake</option>
+                        <select wire:model.live="intake" class="form-select">
+                            <option value="all">All intake</option>
                             @foreach($intakes as $intake)
-                                <option value="{{ $intake }}" {{ $selectedIntake === $intake ? 'selected' : '' }}>
+                                <option value="{{ $intake }}">
                                     {{ $intake }}
                                 </option>
                             @endforeach
@@ -212,19 +273,14 @@ body {
 
                     <div class="col-md-5">
                         <label class="form-label mb-1" style="font-weight:800;">School</label>
-                        <select name="school_id" class="form-select">
-                            <option value="all" {{ $selectedSchool === 'all' ? 'selected' : '' }}>All schools</option>
+                        <select wire:model.live="schoolId" class="form-select">
+                            <option value="all">All schools</option>
                             @foreach($schools as $school)
-                                <option value="{{ $school->id }}"
-                                    {{ (string) $selectedSchool === (string) $school->id ? 'selected' : '' }}>
+                                <option value="{{ $school->id }}">
                                     {{ $school->name }}
                                 </option>
                             @endforeach
                         </select>
-                    </div>
-
-                    <div class="col-md-3 d-grid">
-                        <button class="btn btn-sm btn-primary" type="submit">Apply Filter</button>
                     </div>
 
                     <div class="col-12">
@@ -232,7 +288,7 @@ body {
                             Showing:
                             <b>{{ $selectedIntake === 'all' ? 'All intakes' : $selectedIntake }}</b> /
                             <b>{{ $selectedSchool === 'all' ? 'All schools' : 'Selected school' }}</b>
-                            <a class="ms-2" href="{{ route('agent.dashboard') }}">Reset</a>
+                            <a class="ms-2" href="#" wire:click.prevent="resetFilters">Reset</a>
                         </div>
                     </div>
                 </form>
@@ -258,17 +314,11 @@ body {
                                 @php
                                     $student = $row['student'];
                                     $schools = collect($row['schools']);
-                                    $activeSchoolId = $row['active_school_id'];
-                                    $activeSchool = $schools->firstWhere('id', $activeSchoolId) ?? $schools->first();
-
-                                    $rawPhotoPath = trim((string) ($student->photo ?? ''));
-                                    $rawPhotoPath = str_replace('\\', '/', $rawPhotoPath);
-                                    $rawPhotoPath = preg_replace('#^/?storage/#', '', $rawPhotoPath);
-                                    $rawPhotoPath = ltrim($rawPhotoPath, '/');
-                                    $photoUrl = $rawPhotoPath !== '' ? asset('storage/' . $rawPhotoPath) : null;
+                                    $activeSchool = $row['active_school'];
+                                    $stage = $row['pipeline_stage'] ?? 'new';
                                 @endphp
 
-                                <tr>
+                                <tr wire:key="student-row-{{ $student->id }}-{{ $row['active_school_id'] }}">
                                     <td class="text-center">
                                         <input type="checkbox" class="student-export-checkbox" value="{{ $student->id }}"
                                             onchange="updateSelectedStudentCount()">
@@ -307,15 +357,13 @@ body {
                                         @if($schools->isEmpty())
                                             <span class="text-muted">—</span>
                                         @else
+                                            <span class="text-muted">Switch Application:</span>
                                             <select
                                                 class="form-select form-select-sm school-switch-dropdown"
-                                                data-student-id="{{ $student->id }}"
+                                                wire:model.live="selectedSchools.{{ $student->id }}"
                                             >
                                                 @foreach($schools as $schoolItem)
-                                                    <option
-                                                        value="{{ $schoolItem['id'] }}"
-                                                        {{ $activeSchool && $activeSchool['id'] == $schoolItem['id'] ? 'selected' : '' }}
-                                                    >
+                                                    <option value="{{ $schoolItem['id'] }}">
                                                         {{ $schoolItem['name'] }}
                                                     </option>
                                                 @endforeach
@@ -335,13 +383,22 @@ body {
                                             };
                                         @endphp
 
-                                        <span class="status-chip {{ $statusClass }}" id="status-{{ $student->id }}">
-                                            {{ ucfirst($activeStatus) }}
-                                        </span>
+                                        <div class="mb-1">
+                                            <span class="text-muted">Pipeline Status:</span>
+                                            <span class="status-chip {{ pipelineClass($stage) }}">
+                                                {{ ucwords(str_replace('_', ' ', $stage)) }}
+                                            </span>
+                                        </div>
+                                        <div class="mb-1">
+                                            <span class="text-muted">Application Status:</span>
+                                            <span class="status-chip {{ $statusClass }}" wire:key="status-{{ $student->id }}-{{ $row['active_school_id'] }}">
+                                                {{ ucfirst($activeStatus) }}
+                                            </span>
+                                        </div>
                                     </td>
 
                                     <td>
-                                        <div class="doc-list" id="docs-{{ $student->id }}">
+                                        <div class="doc-list" wire:key="docs-{{ $student->id }}-{{ $row['active_school_id'] }}">
                                             @if($activeSchool && !empty($activeSchool['docs']))
                                                 @foreach($activeSchool['docs'] as $doc)
                                                     <div class="{{ $doc['submitted'] ? 'doc-ok' : 'doc-miss' }}">
@@ -354,9 +411,9 @@ body {
                                         </div>
                                     </td>
 
-                                    <td class="text-center" id="photo-{{ $student->id }}">
-                                        @if($photoUrl)
-                                            <img src="{{ $photoUrl }}" class="thumb" alt="Student Photo">
+                                    <td class="text-center">
+                                        @if($row['photo_url'])
+                                            <img src="{{ $row['photo_url'] }}" class="thumb" alt="Student Photo">
                                         @else
                                             <span class="text-muted">No Photo</span>
                                         @endif
@@ -364,7 +421,6 @@ body {
 
                                     <td>
                                         <a href="{{ $activeSchool['view_url'] ?? '#' }}"
-                                            id="view-btn-{{ $student->id }}"
                                             class="btn btn-sm btn-success w-100 mb-1 {{ $activeSchool ? '' : 'disabled' }}">
                                             View Student
                                         </a>
@@ -373,18 +429,12 @@ body {
                                             ZIP FILES
                                         </a>
 
-                                        <form method="POST" action="{{ route('student.destroy', $student) }}">
-                                            @csrf
-                                            @method('DELETE')
+                                        <form wire:submit.prevent="deleteStudent({{ $student->id }})">
                                             <button type="submit" class="btn btn-sm btn-outline-danger w-100"
                                                 onclick="return confirm('Move this student to recycle bin?')">
                                                 Delete Student
                                             </button>
                                         </form>
-
-                                        <script type="application/json" id="student-school-data-{{ $student->id }}">
-                                            @json($schools->values())
-                                        </script>
                                     </td>
                                 </tr>
                             @empty
@@ -431,7 +481,7 @@ body {
     </div>
 </div>
 
-<div class="modal fade modal-mini" id="editProfileModal" tabindex="-1" aria-hidden="true">
+<div wire:ignore.self class="modal fade modal-mini" id="editProfileModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header py-2">
@@ -439,26 +489,21 @@ body {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form method="POST" action="{{ route('agent.profile.update') }}">
-                @csrf
-                @method('PUT')
-
+            <form wire:submit.prevent="updateProfile">
                 <div class="modal-body">
                     <div class="mb-2">
                         <label class="form-label" style="font-weight:900;">Name *</label>
-                        <input type="text" name="name" class="form-control form-control-sm" value="{{ $agent->name }}"
-                            required>
+                        <input type="text" wire:model.defer="editName" class="form-control form-control-sm" required>
                     </div>
 
                     <div class="mb-2">
                         <label class="form-label" style="font-weight:900;">Email *</label>
-                        <input type="email" name="email" class="form-control form-control-sm"
-                            value="{{ $agent->email }}" required>
+                        <input type="email" wire:model.defer="editEmail" class="form-control form-control-sm" required>
                     </div>
 
                     <div class="mb-1">
                         <label class="form-label" style="font-weight:900;">New Password (optional)</label>
-                        <input type="password" name="password" class="form-control form-control-sm"
+                        <input type="password" wire:model.defer="editPassword" class="form-control form-control-sm"
                             placeholder="Leave blank to keep old password">
                     </div>
 
@@ -494,78 +539,27 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const t = document.getElementById("toastMsg");
-    if (t) {
-        t.style.display = "block";
-        setTimeout(() => {
-            t.style.display = "none";
-        }, 3500);
+document.addEventListener('livewire:init', () => {
+    const editProfileModalEl = document.getElementById('editProfileModal');
+    const editProfileModal = editProfileModalEl ? new bootstrap.Modal(editProfileModalEl) : null;
+
+    Livewire.on('close-edit-profile-modal', () => editProfileModal?.hide());
+
+    function showToast() {
+        const t = document.getElementById("toastMsg");
+        if (t) {
+            t.style.display = "block";
+            setTimeout(() => {
+                t.style.display = "none";
+            }, 3500);
+        }
     }
 
-    document.querySelectorAll('.school-switch-dropdown').forEach(dropdown => {
-        function updateStudentRow() {
-            const studentId = dropdown.dataset.studentId;
-            const schoolId = parseInt(dropdown.value, 10);
+    showToast();
 
-            const dataEl = document.getElementById(`student-school-data-${studentId}`);
-            if (!dataEl) return;
-
-            const schools = JSON.parse(dataEl.textContent || '[]');
-            const selected = schools.find(s => parseInt(s.id, 10) === schoolId);
-            if (!selected) return;
-
-            const docsEl = document.getElementById(`docs-${studentId}`);
-            if (docsEl) {
-                if (selected.docs && selected.docs.length) {
-                    docsEl.innerHTML = selected.docs.map(doc => {
-                        const cls = doc.submitted ? 'doc-ok' : 'doc-miss';
-                        const icon = doc.submitted ? '✔' : '✖';
-                        return `<div class="${cls}">${icon} ${doc.name}</div>`;
-                    }).join('');
-                } else {
-                    docsEl.innerHTML = `<span class="text-muted">No required documents set.</span>`;
-                }
-            }
-
-            const statusEl = document.getElementById(`status-${studentId}`);
-            if (statusEl) {
-                const status = (selected.status || 'pending').toLowerCase();
-
-                statusEl.className = 'status-chip';
-
-                if (status === 'selected' || status === 'coe-granted') {
-                    statusEl.classList.add('chip-accepted');
-                } else if (
-                    status === 'rejected' ||
-                    status === 'coe-rejected' ||
-                    status === 'visa-rejected' ||
-                    status === 'withdrawal'
-                ) {
-                    statusEl.classList.add('chip-rejected');
-                } else if (status === 'visa-granted') {
-                    statusEl.classList.add('chip-enrolled');
-                } else {
-                    statusEl.classList.add('chip-pending');
-                }
-
-                statusEl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-            }
-
-            const viewBtn = document.getElementById(`view-btn-${studentId}`);
-            if (viewBtn) {
-                viewBtn.href = selected.view_url || '#';
-                if (selected.view_url) {
-                    viewBtn.classList.remove('disabled');
-                } else {
-                    viewBtn.classList.add('disabled');
-                }
-            }
-        }
-
-        dropdown.addEventListener('change', updateStudentRow);
-        updateStudentRow();
+    Livewire.hook('morphed', () => {
+        showToast();
     });
 });
 </script>
-</x-app-layout>
+</div>

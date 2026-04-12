@@ -10,15 +10,14 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\SchoolController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\AgentController;
 use App\Http\Controllers\StudentApplicationCommentController;
 use App\Http\Controllers\StudentZipController;
-use App\Http\Controllers\Agent\AgentDashboardController;
 use App\Http\Controllers\Student\StudentDashboardController;
 use App\Http\Controllers\School\SchoolDashboardController;
 
 use App\Livewire\Admin\PreSchoolDashboard;
 use App\Livewire\Admin\AgentPage;
+use App\Livewire\Agent\AgentDashboard;
 
 
 use Illuminate\Support\Facades\Route;
@@ -221,12 +220,16 @@ Route::middleware(['auth'])->group(function () {
 });
 
 //agent dashboard controller
-Route::middleware(['auth', 'role:agent'])->group(function () {
-    Route::get('/agent/dashboard', [AgentDashboardController::class, 'index'])
-        ->name('agent.dashboard');
+// Route::middleware(['auth', 'role:agent'])->group(function () {
+//     Route::get('/agent/dashboard', [AgentDashboardController::class, 'index'])
+//         ->name('agent.dashboard');
 
-    Route::put('/agent/profile', [AgentDashboardController::class, 'updateProfile'])
-        ->name('agent.profile.update');
+//     Route::put('/agent/profile', [AgentDashboardController::class, 'updateProfile'])
+//         ->name('agent.profile.update');
+// });
+
+Route::middleware(['auth', 'role:agent'])->group(function () {
+    Route::get('/agent/dashboard', AgentDashboard::class)->name('agent.dashboard');
 });
 
 // student dashboard
