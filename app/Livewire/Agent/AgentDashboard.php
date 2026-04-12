@@ -125,7 +125,7 @@ class AgentDashboard extends Component
             ->get();
 
         $studentsQuery = Student::query()
-            ->with(['applications.school'])
+            ->with(['applications.school','strength'])
             ->where('created_by', $this->agent->id)
             ->whereNull('deleted_at')
             ->latest('id');

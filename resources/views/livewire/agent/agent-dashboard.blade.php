@@ -191,7 +191,7 @@ body {
 
 <div class="container page-container small-ui" wire:loading.class="opacity-50">
     <div class="row g-3">
-        <div class="col-lg-9">
+        <div class="col-lg-10">
 
             <div class="card-box">
                 <div class="d-flex justify-content-between align-items-center">
@@ -297,15 +297,16 @@ body {
                     <table class="table table-bordered table-striped align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
-                                <th style="width:45px;" class="text-center">
+                                <th style="width:15px;" class="text-center">
                                     <input type="checkbox" onchange="toggleAllStudentExportCheckboxes(this)">
                                 </th>
-                                <th style="width:55px;">#</th>
+                                <th style="width:15px;">#</th>
                                 <th>Student</th>
+                                <th style="width:80px;">Language Strength</th>
                                 <th style="width:170px;">Assigned Schools</th>
                                 <th style="width:170px;">Status</th>
                                 <th style="width:360px;">Documents</th>
-                                <th style="width:180px;">Photo</th>
+                                <th style="width:250px;">Photo</th>
                                 <th style="width:190px;">Actions</th>
                             </tr>
                         </thead>
@@ -351,6 +352,28 @@ body {
                                                 Age: {{ $student->age }}
                                             @endif
                                         </div>
+                                    </td>
+
+                                    <td>
+                                        @if(($student->strength?->overall ?? 0) > 0)
+                                            <div class="small">
+                                                <div class="fw-bold mb-1">
+                                                    Overall 
+                                                    <span class="badge bg-dark">
+                                                        {{ $student->strength->overall }}%
+                                                    </span>
+                                                </div>
+
+                                                <div class="text-muted">
+                                                    Hiragana: {{ $student->strength->hiragana ?? 0 }}%
+                                                    Katagana: {{ $student->strength->katagana ?? 0 }}%
+                                                    Numbers: {{ $student->strength->numbers ?? 0 }}%
+                                                    Interview: {{ $student->strength->interview ?? 0 }}%
+                                                </div>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">Not Checked Yet</span>
+                                        @endif
                                     </td>
 
                                     <td>
@@ -449,7 +472,7 @@ body {
 
         </div>
 
-        <div class="col-lg-3">
+        <div class="col-lg-2">
             <div class="card-box side-box">
                 <h6 class="mb-2" style="font-weight:800;">About this page</h6>
                 <div class="text-muted" style="font-size:12px; line-height:1.5;">
