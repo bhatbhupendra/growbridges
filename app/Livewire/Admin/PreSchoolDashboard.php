@@ -36,6 +36,9 @@ class PreSchoolDashboard extends Component
     public string $nationality = 'all';
 
     #[Url]
+    public string $schoolFilter = 'all';
+
+    #[Url]
     public string $pipeline = 'all';
 
     public array $allowedStatuses = [
@@ -292,6 +295,14 @@ class PreSchoolDashboard extends Component
             $baseQuery->where('status', $this->status);
         }
 
+        if ($this->schoolFilter !== 'all' && ctype_digit($this->schoolFilter)) {
+            $schoolId = (int) $this->schoolFilter;
+
+            $baseQuery->whereHas('student.applications', function ($q) use ($schoolId) {
+                $q->where('school_id', $schoolId);
+            });
+        }
+
         if ($this->search !== '') {
             $search = $this->search;
 
@@ -444,6 +455,7 @@ class PreSchoolDashboard extends Component
             'intakes' => $intakes,
             'nationalities' => $nationalities,
             'agents' => $agents,
+            'allSchools' => $allSchools,
             'applications' => $applications,
             'rows' => $rows,
             'counts' => $counts,

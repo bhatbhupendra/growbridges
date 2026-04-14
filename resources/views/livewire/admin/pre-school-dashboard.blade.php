@@ -302,6 +302,16 @@
                         </div>
 
                         <div class="col-md-2">
+                            <label class="form-label fw-bold">School</label>
+                            <select wire:model.live="schoolFilter" class="form-select">
+                                <option value="all">All schools</option>
+                                @foreach($allSchools as $item)
+                                    <option value="{{ $item->id }}">{{ $item->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
                             <label class="form-label fw-bold">Application Status</label>
                             <select wire:model.live="status" class="form-select">
                                 <option value="all">All status</option>
