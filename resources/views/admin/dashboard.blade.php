@@ -209,7 +209,7 @@ body {
                         Manage Users
                     </a>
 
-                    <a href="" class="btn btn-outline-primary btn-sm">
+                    <a href="{{ route('admin.recycle-bin.students') }}" class="btn btn-outline-primary btn-sm">
                         RECYCLE BIN
                     </a>
 

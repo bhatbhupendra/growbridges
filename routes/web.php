@@ -18,6 +18,8 @@ use App\Http\Controllers\School\SchoolDashboardController;
 use App\Livewire\Admin\PreSchoolDashboard;
 use App\Livewire\Admin\AgentPage;
 use App\Livewire\Agent\AgentDashboard;
+use App\Livewire\Admin\RecycleBinStudents;
+
 
 
 use Illuminate\Support\Facades\Route;
@@ -256,6 +258,12 @@ Route::middleware(['auth', 'role:admin,school'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/students/{student}/strength', [App\Http\Controllers\Admin\StudentStrengthController::class, 'update'])
         ->name('admin.students.strength.update');
+});
+
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/recycle-bin/students', RecycleBinStudents::class)
+        ->name('admin.recycle-bin.students');
 });
 
 require __DIR__.'/auth.php';

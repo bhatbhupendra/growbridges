@@ -642,6 +642,14 @@
                                                 >
                                                     Assign School
                                                 </button>
+
+                                                <form class="btn btn-sm btn-outline-danger w-100 mb-1" action="{{ route('student.destroy', $st->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to move this student to recycle bin?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit">
+                                                        Delete
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
