@@ -205,6 +205,10 @@ body {
                         PRE-SCHOOL
                     </a>
 
+                    <a href="{{ route('admin.assign-students-to-inspector', 1) }}" class="btn btn-outline-primary btn-sm">
+                        INSPECTOR
+                    </a>
+
                     <a href="{{ route('manage-users.index') }}" class="btn btn-outline-primary btn-sm">
                         Manage Users
                     </a>

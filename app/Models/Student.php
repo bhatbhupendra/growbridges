@@ -171,4 +171,14 @@ class Student extends Model
     {
         return $this->hasOne(StudentStrength::class);
     }
+
+    public function inspectors()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'student_inspector_assignments',
+            'student_id',
+            'inspector_id'
+        )->withPivot(['assigned_by', 'assigned_at'])->withTimestamps();
+    }
 }

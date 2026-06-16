@@ -110,6 +110,7 @@
                     <option value="agent">Agent</option>
                     <option value="student">Student</option>
                     <option value="school">School</option>
+                    <option value="inspector">Inspector</option>
                 </select>
 
                 <button class="btn btn-main w-100">Create</button>

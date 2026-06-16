@@ -44,7 +44,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'min:6'],
-            'role' => ['required', 'in:admin,agent,student,school'],
+            'role' => ['required', 'in:admin,agent,student,school,inspector'],
         ]);
 
         DB::transaction(function () use ($request) {

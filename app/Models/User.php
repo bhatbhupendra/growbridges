@@ -106,4 +106,14 @@ class User extends Authenticatable
     {
         return $this->role === 'school';
     }
+
+    public function inspectedStudents()
+    {
+        return $this->belongsToMany(
+            Student::class,
+            'student_inspector_assignments',
+            'inspector_id',
+            'student_id'
+        )->withPivot(['assigned_by', 'assigned_at'])->withTimestamps();
+    }
 }

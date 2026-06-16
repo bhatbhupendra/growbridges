@@ -20,6 +20,9 @@ use App\Livewire\Admin\AgentPage;
 use App\Livewire\Agent\AgentDashboard;
 use App\Livewire\Admin\RecycleBinStudents;
 
+use App\Livewire\Admin\AssignStudentToInspector;
+use App\Livewire\Inspector\InspectorDashboard;
+
 
 
 use Illuminate\Support\Facades\Route;
@@ -167,6 +170,10 @@ Route::middleware(['auth'])->get('/dashboard', function () {
         return redirect()->route('school.dashboard');
     }
 
+    if (auth()->user()->role === 'inspector') {
+        return redirect()->route('inspector.dashboard');
+    }
+
     abort(403);
 })->name('dashboard');
 
@@ -264,6 +271,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/recycle-bin/students', RecycleBinStudents::class)
         ->name('admin.recycle-bin.students');
+});
+
+//inspector
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/assign-students-to-inspector', AssignStudentToInspector::class)
+        ->name('admin.assign-students-to-inspector');
+
+    Route::get('/inspector/dashboard', InspectorDashboard::class)
+        ->name('inspector.dashboard');
 });
 
 require __DIR__.'/auth.php';
