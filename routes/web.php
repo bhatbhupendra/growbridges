@@ -23,7 +23,7 @@ use App\Livewire\Admin\RecycleBinStudents;
 use App\Livewire\Admin\AssignStudentToInspector;
 use App\Livewire\Inspector\InspectorDashboard;
 
-
+use App\Http\Controllers\ChatController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -280,6 +280,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/inspector/dashboard', InspectorDashboard::class)
         ->name('inspector.dashboard');
+});
+
+//chat routes
+Route::middleware('auth')->group(function () {
+    Route::get('/chat/{receiver}/{sender}', [ChatController::class, 'show'])->name('chat.show');
+    Route::post('/chat/{receiver}/{sender}', [ChatController::class, 'send'])->name('chat.send');
 });
 
 require __DIR__.'/auth.php';

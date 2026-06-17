@@ -213,6 +213,9 @@ body {
                 <hr class="my-2">
                 <div><b>Name:</b> {{ $agent->name }}</div>
                 <div><b>Email:</b> {{ $agent->email }}</div>
+                <a href="{{ route('chat.show', [2, auth()->id()]) }}" class="btn btn-sm btn-primary"><!-- id 1 for hosted -->
+                    Chat with Grow Bridges
+                </a>
             </div>
 
             <div class="card-box">

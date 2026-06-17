@@ -267,6 +267,9 @@ body {
                 <hr class="my-2">
                 <div><b>Name:</b> {{ $agent->name }}</div>
                 <div><b>Email:</b> {{ $agent->email }}</div>
+                <a href="{{ route('chat.show', [$agent->id, auth()->id()]) }}" class="btn btn-sm btn-primary">
+                    Chat
+                </a>
             </div>
 
             <div class="card-box">
