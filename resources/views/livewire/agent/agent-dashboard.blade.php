@@ -213,9 +213,6 @@ body {
                 <hr class="my-2">
                 <div><b>Name:</b> {{ $agent->name }}</div>
                 <div><b>Email:</b> {{ $agent->email }}</div>
-                <a href="{{ route('chat.show', [2, auth()->id()]) }}" class="btn btn-sm btn-primary"><!-- id 1 for hosted -->
-                    Chat with Grow Bridges
-                </a>
             </div>
 
             <div class="card-box">
@@ -477,6 +474,55 @@ body {
 
         <div class="col-lg-2">
             <div class="card-box side-box">
+                <!-- Contact Section -->
+                <div class="mb-2 col text-center" style="font-weight:800;">
+                    📞 Chat with Growbridges
+                    <a href="{{ route('chat.show', [2, auth()->id()]) }}" class="btn btn-sm btn-primary"><!-- change id to 1 before deploying -->
+                        Messenge Admin
+                    </a>
+                    <div class="">or</div>
+                </div>
+                <div class="col g-2 text-center">
+                    <!-- WhatsApp -->
+                     <div class="text-center mt-2 fw-bold text-success">
+                            WhatsApp
+                        </div>
+
+                        <small class="text-muted">
+                            +819091327070
+                        </small>
+                    <div class="col-6">
+                        <a href="https://wa.me/819091327070" target="_blank">
+                            <img src="{{ asset('images/whatsapp.jpeg') }}"
+                                class="img-fluid rounded border p-1 bg-white"
+                                alt="WhatsApp QR"
+                                style="max-width:180px;">
+                        </a>
+
+                        
+                    </div>
+
+                    <!-- Viber -->
+                     <div class="mt-2 fw-bold" style="color:#7360F2;">
+                            Viber
+                        </div>
+
+                        <small class="text-muted">
+                            +819091327070
+                        </small>
+                    <div class="col-6">
+                        <a href="viber://chat?number=%2B819091327070">
+                            <img src="{{ asset('images/viber.jpeg') }}"
+                                class="img-fluid rounded border p-1 bg-white"
+                                alt="Viber QR"
+                                style="max-width:180px;">
+                        </a>                        
+                    </div>
+
+                </div>
+
+                <hr class="my-3">
+
                 <h6 class="mb-2" style="font-weight:800;">About this page</h6>
                 <div class="text-muted" style="font-size:12px; line-height:1.5;">
                     Filter students by <b>Intake</b> first, then narrow by <b>School</b>.
